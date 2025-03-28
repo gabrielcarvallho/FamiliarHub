@@ -56,9 +56,6 @@ class UserService(metaclass=ServiceBase):
         if is_admin:
             group = self.group_repository.get_admin_group()
         else:
-            if not group:
-                raise ValidationError("A group is required when is_admin is False.")
-            
             if group.name == 'admin':
                 raise ValidationError("Non-admin users cannot be assigned to the admin group.")
 

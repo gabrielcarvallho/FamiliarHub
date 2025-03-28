@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils.crypto import get_random_string
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Group
 
 
@@ -36,6 +37,13 @@ class CustomUser(AbstractBaseUser):
 
     def clean(self):
         super().clean()
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.password = get_random_string(length=12)
+            self.set_password(self.password)
+
+        super().save(*args, **kwargs)
     
     def has_perm(self, perm, obj=None):
         if getattr(self, 'is_admin', False):

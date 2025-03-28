@@ -70,7 +70,7 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_DOMAIN': os.getenv('DOMAIN') if ENV == 'prod' else None,
     'AUTH_COOKIE_SECURE': True,
     'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_SAMESITE': 'None'
+    'AUTH_COOKIE_SAMESITE': 'None',
 }
 
 MIDDLEWARE = [

@@ -38,7 +38,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             httponly=True,
             secure=True,
             samesite='None',
-            max_age=60 * 5,
         )
 
         response.set_cookie(

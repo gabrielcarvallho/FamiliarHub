@@ -33,13 +33,6 @@ class CustomUserRequestSerializer(serializers.ModelSerializer):
             message="This email is already in use."
         )]
     )
-    
-    password = serializers.CharField(
-        write_only=True,
-        required=False,
-        style={'input_type': 'password'},
-        min_length=8
-    )
 
     group = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all(),
@@ -51,7 +44,7 @@ class CustomUserRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password', 'is_admin', 'group']
+        fields = ['email', 'is_admin', 'group']
 
     def validate(self, attrs):
         is_admin = attrs.get('is_admin', False)

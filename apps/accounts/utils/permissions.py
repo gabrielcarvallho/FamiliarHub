@@ -15,3 +15,7 @@ class UserPermission(BasePermission):
             return False
 
         return request.user.has_perm(f'accounts.{action}_customuser')
+
+class IsAdmin(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_admin

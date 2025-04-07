@@ -9,13 +9,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from apps.accounts.utils.permissions import UserPermission, IsAdmin
+from apps.core.utils.permissions import UserPermission
 from apps.accounts.services import AuthService, UserService, GroupService
 
 
 class CustomUserView(APIView):
     permission_classes = [IsAuthenticated, UserPermission]
     serializer_class = CustomUserRequestSerializer
+
+    permission_app_label  = 'accounts'
+    permission_model = 'customuser'
+
     service = UserService()
 
     def get(self, request):
@@ -63,9 +67,12 @@ class CustomUserView(APIView):
         return Response({'detail': 'User ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class InviteUserView(APIView):
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, UserPermission]
     serializer_class = CustomUserRequestSerializer
     service = UserService()
+
+    permission_app_label  = 'accounts'
+    permission_model = 'customuser'
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)

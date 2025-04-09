@@ -1,7 +1,6 @@
-import uuid
 from rest_framework.exceptions import NotFound
 
-from apps.core import ServiceBase
+from apps.core.services import ServiceBase
 from apps.products.repositories import ProductRepository
 
 

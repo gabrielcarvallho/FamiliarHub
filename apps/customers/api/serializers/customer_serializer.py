@@ -1,44 +1,16 @@
 from rest_framework import serializers
 
-from apps.customers.models import Customer, CustomerContact
-from apps.customers.utils import validate_cnpj, validate_phone, validate_state_tax_registration
+from apps.customers.utils import fields
+from apps.customers.models import Customer
+from apps.customers.api.serializers import ContactSerializer
 
-
-class CustomerContactSerializer(serializers.ModelSerializer):
-    contact_phone = serializers.CharField(validators=[validate_phone])
-
-    class Meta:
-        model = CustomerContact
-        fields = [
-            'id', 
-            'name', 
-            'date_of_birth', 
-            'contact_phone', 
-            'contact_email', 
-            'updated_at'
-        ]
-        read_only_fields = ['id', 'updated_at']
-    
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-
-        ordered_data = {
-            'id': data.get('id'),
-            'name': data.get('name'),
-            'date_of_birth': data.get('date_of_birth'),
-            'contact_phone': data.get('contact_phone'),
-            'contact_email': data.get('contact_email'),
-            'updated_at': data.get('updated_at'),
-        }
-
-        return ordered_data
 
 class CustomerSerializer(serializers.ModelSerializer):
-    cnpj = serializers.CharField(validators=[validate_cnpj])
-    phone_number = serializers.CharField(validators=[validate_phone])
-    state_tax_registration = serializers.CharField(required=False, allow_blank=True, validators=[validate_state_tax_registration])
+    cnpj = fields.CNPJField()
+    phone_number = fields.PhoneNumberField()
+    state_tax_registration = fields.StateTaxField(required=False, allow_blank=True)
 
-    customer_contact = CustomerContactSerializer()
+    contact = ContactSerializer()
 
     class Meta:
         model = Customer
@@ -50,7 +22,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             'phone_number', 
             'email', 
             'state_tax_registration', 
-            'customer_contact', 
+            'contact',
             'created_at', 
             'updated_at'
         ]
@@ -67,7 +39,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             'phone_number': data.get('phone_number'),
             'email': data.get('email'),
             'state_tax_registration': data.get('state_tax_registration'),
-            'customer_contact': data.get('customer_contact'),
+            'contact': data.get('contact'),
             'created_at': data.get('created_at'),
             'updated_at': data.get('updated_at'),
         }

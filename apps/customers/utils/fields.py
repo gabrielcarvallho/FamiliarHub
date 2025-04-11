@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 class CNPJField(serializers.CharField):
     default_error_messages = {
-        "invalid_format": "CNPJ must contain 14 numeric digits.",
+        "invalid_format": "Invalid CNPJ. Must contain 14 numeric digits.",
         "invalid": "Invalid CNPJ.",
     }
 
@@ -35,7 +35,7 @@ class CNPJField(serializers.CharField):
 
 class PhoneNumberField(serializers.CharField):
     default_error_messages = {
-        "invalid_format": "Phone number must contain 10 or 11 numeric digits."
+        "invalid_format": "Invalid phone number. Must contain 10 or 11 numeric digits."
     }
 
     def to_internal_value(self, data):
@@ -61,3 +61,17 @@ class StateTaxField(serializers.CharField):
                 self.fail('invalid_format')
             
             return field
+
+class CEPField(serializers.CharField):
+    default_error_messages = {
+        "invalid_format": "Invalid CEP. Must contain 8 digits."
+    }
+
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        field = re.sub(r'\D', '', data)
+
+        if not len(field) == 8:
+            self.fail('invalid_format')
+
+        return field

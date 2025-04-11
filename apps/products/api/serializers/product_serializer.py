@@ -12,16 +12,16 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
+        representation = super().to_representation(instance)
 
         ordered_data = {
-            'id': data.get('id'),
-            'name': data.get('name'),
-            'price': data.get('price'),
-            'weight': data.get('weight'),
-            'batch_packages': data.get('batch_packages'),
-            'created_at': data.get('created_at'),
-            'updated_at': data.get('updated_at')
+            'id': representation.get('id'),
+            'name': representation.get('name'),
+            'price': representation.get('price'),
+            'weight': representation.get('weight'),
+            'batch_packages': representation.get('batch_packages'),
+            'created_at': representation.get('created_at'),
+            'updated_at': representation.get('updated_at')
         }
 
         return ordered_data

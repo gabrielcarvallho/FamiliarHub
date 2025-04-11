@@ -20,12 +20,14 @@ class CustomUserView(APIView):
     permission_app_label  = 'accounts'
     permission_model = 'customuser'
 
-    service = UserService()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = UserService()
 
     def get(self, request):
         user_id = request.query_params.get('id', None)
 
-        if 'list' in request.GET:
+        if request.query_params.get('list'):
             users = self.service.get_all_users(request)
             serializer = CustomUserResponseSerializer(users, many=True)
             
@@ -69,10 +71,13 @@ class CustomUserView(APIView):
 class InviteUserView(APIView):
     permission_classes = [IsAuthenticated, UserPermission]
     serializer_class = CustomUserRequestSerializer
-    service = UserService()
 
     permission_app_label  = 'accounts'
     permission_model = 'customuser'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = UserService()
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
@@ -84,7 +89,10 @@ class InviteUserView(APIView):
 
 class GroupListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, UserPermission]
-    service = GroupService()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = GroupService()
 
     def get(self, request):
         groups = self.service.get_all_groups(request)

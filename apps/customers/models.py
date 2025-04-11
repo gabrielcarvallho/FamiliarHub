@@ -26,14 +26,14 @@ class Contact(models.Model):
 
 class Address(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='address')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='addresses')
     cep = models.CharField(max_length=8)
     street_name = models.CharField(max_length=90)
     district = models.CharField(max_length=50)
     number = models.CharField(max_length=5)
     city = models.CharField(max_length=70)
     state = models.CharField(max_length=2)
-    observation = models.CharField(max_length=100)
+    observation = models.CharField(max_length=100, null=True, blank=True)
     is_billing_address = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

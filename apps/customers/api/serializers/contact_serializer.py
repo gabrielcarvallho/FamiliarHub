@@ -9,26 +9,19 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = [
-            'id', 
-            'name', 
-            'date_of_birth', 
-            'contact_phone', 
-            'contact_email', 
-            'updated_at'
-        ]
+        exclude = ['customer']
         read_only_fields = ['id', 'updated_at']
     
     def to_representation(self, instance):
-        data = super().to_representation(instance)
+        representation = super().to_representation(instance)
 
         ordered_data = {
-            'id': data.get('id'),
-            'name': data.get('name'),
-            'date_of_birth': data.get('date_of_birth'),
-            'contact_phone': data.get('contact_phone'),
-            'contact_email': data.get('contact_email'),
-            'updated_at': data.get('updated_at'),
+            'id': representation.get('id'),
+            'name': representation.get('name'),
+            'date_of_birth': representation.get('date_of_birth'),
+            'contact_phone': representation.get('contact_phone'),
+            'contact_email': representation.get('contact_email'),
+            'updated_at': representation.get('updated_at'),
         }
 
         return ordered_data

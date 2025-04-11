@@ -16,12 +16,14 @@ class CustomerView(APIView):
     permission_app_label  = 'customers'
     permission_model = 'customer'
 
-    service = CustomerService()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = CustomerService()
 
     def get(self, request):
         customer_id = request.query_params.get('id', None)
 
-        if 'list' in request.GET:
+        if request.query_params.get('list'):
             customers = self.service.get_all_customers()
             response = self.serializer_class(customers, many=True)
 

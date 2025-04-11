@@ -1,5 +1,6 @@
 import uuid
-from apps.customers.models import Customer
+from django.db.models import Prefetch
+from apps.customers.models import Customer, Address
 
 
 class CustomerRepository:
@@ -10,10 +11,17 @@ class CustomerRepository:
         return Customer.objects.filter(cnpj=cnpj).exists()
     
     def get_by_id(self, customer_id: uuid.UUID) -> Customer:
-        return Customer.objects.get(id=customer_id)
+        return Customer.objects.prefetch_related('contact', 'addresses').get(id=customer_id)
     
     def get_all(self) -> list[Customer]:
-        return Customer.objects.all()
+        return Customer.objects.prefetch_related(
+            'contact',
+            Prefetch(
+                'addresses',
+                queryset=Address.objects.filter(is_billing_address=True),
+                to_attr='billing_address'
+            )
+        ).all()
     
     def create(self, customer_data: dict) -> Customer:
         return Customer.objects.create(**customer_data)

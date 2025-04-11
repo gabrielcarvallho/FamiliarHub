@@ -2,46 +2,48 @@ from rest_framework import serializers
 
 from apps.customers.utils import fields
 from apps.customers.models import Customer
-from apps.customers.api.serializers import ContactSerializer
+from apps.customers.api.serializers import ContactSerializer, AddressSerializer
 
-
+    
 class CustomerSerializer(serializers.ModelSerializer):
     cnpj = fields.CNPJField()
     phone_number = fields.PhoneNumberField()
     state_tax_registration = fields.StateTaxField(required=False, allow_blank=True)
 
     contact = ContactSerializer()
+    addresses = AddressSerializer(many=True, required=False)
+    billing_address = AddressSerializer(write_only=True)
 
     class Meta:
         model = Customer
         fields = [
-            'id', 
-            'company_name', 
-            'brand_name', 
-            'cnpj', 
-            'phone_number', 
-            'email', 
-            'state_tax_registration', 
-            'contact',
-            'created_at', 
-            'updated_at'
+            'id', 'company_name', 'brand_name', 'cnpj', 'phone_number', 'email', 
+            'state_tax_registration', 'addresses', 'contact', 'billing_address', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'addresses']
 
     def to_representation(self, instance):
-        data = super().to_representation(instance)
+        representation = super().to_representation(instance)
+        is_list_view = hasattr(instance, 'billing_address')
 
-        ordered_data = {
-            'id': data.get('id'),
-            'company_name': data.get('company_name'),
-            'brand_name': data.get('brand_name'),
-            'cnpj': data.get('cnpj'),
-            'phone_number': data.get('phone_number'),
-            'email': data.get('email'),
-            'state_tax_registration': data.get('state_tax_registration'),
-            'contact': data.get('contact'),
-            'created_at': data.get('created_at'),
-            'updated_at': data.get('updated_at'),
-        }
+        if is_list_view and instance.billing_address:
+            representation['billing_address'] = AddressSerializer(instance.billing_address[0]).data
+            representation.pop('addresses', None)
+        else:
+            representation.pop('billing_address', None)
 
-        return ordered_data
+        ordered_fields = [
+            'id',
+            'company_name',
+            'brand_name',
+            'cnpj',
+            'phone_number',
+            'email',
+            'state_tax_registration',
+            'billing_address' if is_list_view else 'addresses',
+            'contact',
+            'created_at',
+            'updated_at'
+        ]
+
+        return {field: representation.get(field) for field in ordered_fields if field in representation}

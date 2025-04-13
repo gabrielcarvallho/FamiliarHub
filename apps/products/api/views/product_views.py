@@ -23,7 +23,7 @@ class ProductView(APIView):
     def get(self, request):
         product_id = request.query_params.get('id', None)
 
-        if request.query_params.get('list'):
+        if 'list' in request.GET:
             products = self.service.get_all_products()
             response = self.serializer_class(products, many=True)
 

@@ -27,7 +27,7 @@ class CustomUserView(APIView):
     def get(self, request):
         user_id = request.query_params.get('id', None)
 
-        if request.query_params.get('list'):
+        if 'list' in request.GET:
             users = self.service.get_all_users(request)
             serializer = CustomUserResponseSerializer(users, many=True)
             

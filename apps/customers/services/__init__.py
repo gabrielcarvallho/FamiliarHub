@@ -1,8 +1,8 @@
-from .contact_service import ContactService
+from .address_service import AddressService
 from .customer_service import CustomerService
 
 
 __all__ = [
     'CustomerService',
-    'ContactService'
+    'AddressService'
 ]

@@ -23,7 +23,7 @@ class CustomerView(APIView):
     def get(self, request):
         customer_id = request.query_params.get('id', None)
 
-        if request.query_params.get('list'):
+        if 'list' in request.GET:
             customers = self.service.get_all_customers()
             response = self.serializer_class(customers, many=True)
 

@@ -1,8 +1,7 @@
 import jwt
-from datetime import timedelta
 from django.conf import settings
 
-from apps.core.services.base_service import ServiceBase
+from apps.core.services import ServiceBase
 
 from rest_framework.exceptions import AuthenticationFailed
 

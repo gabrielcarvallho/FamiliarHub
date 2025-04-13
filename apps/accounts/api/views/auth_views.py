@@ -79,7 +79,10 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 class CustomTokenLogoutView(APIView):
     permission_classes = [IsAuthenticated]
-    service = AuthService()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = AuthService()
 
     def post(self, request):
         self.service.logout(request)

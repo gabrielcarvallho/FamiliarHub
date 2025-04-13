@@ -16,7 +16,9 @@ class ProductView(APIView):
     permission_app_label  = 'products'
     permission_model = 'product'
 
-    service = ProductService()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = ProductService()
 
     def get(self, request):
         product_id = request.query_params.get('id', None)
@@ -55,7 +57,6 @@ class ProductView(APIView):
 
             if serializer.is_valid():
                 updated_product = self.service.update_product(product, **serializer.validated_data)
-                print(updated_product.name)
                 response = self.serializer_class(updated_product)
 
                 return Response({'product': response.data}, status=status.HTTP_200_OK)

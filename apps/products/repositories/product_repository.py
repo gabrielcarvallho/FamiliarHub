@@ -18,5 +18,5 @@ class ProductRepository:
     def delete(self, product_id: uuid.UUID) ->  None:
         Product.objects.filter(id=product_id).delete()
     
-    def save(self, obj: Product) -> Product:
+    def save(self, obj: Product) -> None:
         obj.save()

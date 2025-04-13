@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from apps.core import ServiceBase, EmailService
+from apps.core.services import ServiceBase, EmailService
 from apps.accounts.repositories.user_repository import UserRepository, GroupRepository
 
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError

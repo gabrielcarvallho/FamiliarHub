@@ -1,7 +1,7 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 
 
-class UserPermission(BasePermission):
+class UserPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         action = {
             'POST': 'add',
@@ -20,4 +20,11 @@ class UserPermission(BasePermission):
         if request.user.is_admin:
             return True
 
-        return request.user.has_perm(f'{app_label}.{action}{model_name}')
+        return request.user.has_perm(f'{app_label}.{action}_{model_name}')
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_admin:
+            return True
+        
+        return obj.created_by.id == request.user.id

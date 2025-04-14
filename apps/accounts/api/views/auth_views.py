@@ -82,10 +82,10 @@ class CustomTokenLogoutView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = AuthService()
+        self.__service = AuthService()
 
     def post(self, request):
-        self.service.logout(request)
+        self.__service.logout(request)
 
         response = Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
         response.delete_cookie('access_token')

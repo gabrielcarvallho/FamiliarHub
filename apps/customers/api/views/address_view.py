@@ -14,7 +14,7 @@ class AddressView(APIView):
     serializer_class = AddressSerializer
 
     permission_app_label  = 'customers'
-    permission_model = 'customer'
+    permission_model = 'address'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

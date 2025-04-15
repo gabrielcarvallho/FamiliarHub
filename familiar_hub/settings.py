@@ -45,6 +45,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'EXCEPTION_HANDLER': 'apps.core.exception_handler.custom_exception_handler',
+    'NON_FIELD_ERRORS_KEY': 'error',
 }
 
 COOKIE_SECURE = ENV == 'prod'

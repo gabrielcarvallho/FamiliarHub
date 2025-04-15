@@ -3,25 +3,25 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from apps.orders.services import PaymentService
-from apps.orders.api.serializers import PaymentSerializer
+from apps.orders.services import StatusService
+from apps.orders.api.serializers import StatusSerializer
 
 from apps.core.utils.permissions import UserPermission
 
 
-class PaymentView(APIView):
+class StatusView(APIView):
     permission_classes = [IsAuthenticated, UserPermission]
-    serializer_class = PaymentSerializer
+    serializer_class = StatusSerializer
 
     permission_app_label  = 'orders'
-    permission_model = 'payment'
+    permission_model = 'status'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.__service = PaymentService()
-    
+        self.__service = StatusService()
+
     def get(self, request):
-        payment_methods = self.__service.get_all_payment_methods()
-        response = self.serializer_class(payment_methods, many=True)
+        order_status = self.__service.get_all_status()
+        response = self.serializer_class(order_status, many=True)
 
         return Response({'payment_methods': response.data}, status=status.HTTP_200_OK)

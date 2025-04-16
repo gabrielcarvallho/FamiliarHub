@@ -1,7 +1,10 @@
 import uuid
+from datetime import timedelta
+
 from django.db import models
 
 from apps.products.models import Product
+from apps.accounts.models import CustomUser
 from apps.customers.models import Customer, Address
 
 
@@ -23,12 +26,20 @@ class Order(models.Model):
     delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     delivery_date = models.DateField()
 
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_orders')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def total_price(self):
         return sum(item.total_price for item in self.product_items.all())
+    
+    @property
+    def payment_due_date(self):
+        additional_info = self.payment_method.additional_info or {}
+        due_days = additional_info.get('due_days', 0)
+        
+        return self.delivery_date + timedelta(days=due_days)
 
 class ProductOrder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

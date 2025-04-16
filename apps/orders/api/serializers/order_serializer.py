@@ -1,9 +1,8 @@
 from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from apps.orders.models import Order
-from apps.customers.api.serializers import AddressSerializer, CustomerSerializer
+from apps.customers.api.serializers import AddressSerializer, CustomerCustomSerializer
 
 from apps.orders.api.serializers import (
     StatusSerializer,
@@ -40,3 +39,33 @@ class OrderRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid delivery date.")
         
         return attrs
+
+class OrderResponseSerializer(serializers.ModelSerializer):
+    customer = CustomerCustomSerializer()
+    order_status = StatusSerializer()
+    payment_method = PaymentSerializer()
+    delivery_address = AddressSerializer()
+    products = ProductOrderSerializer(many=True, source='product_items')
+
+    class Meta:
+        model = Order
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        ordered_data = {
+            'id': representation.get('id'),
+            'customer': representation.get('customer'),
+            'products': representation.get('products'),
+            'total_price': f"{instance.total_price:.2f}",
+            'payment_method': representation.get('payment_method'),
+            'delivery_address': representation.get('delivery_address'),
+            'delivery_date': representation.get('delivery_date'),
+            'due_date': instance.payment_due_date,
+            'order_status': representation.get('order_status'),
+            'created_at': representation.get('created_at'),
+            'updated_at': representation.get('updated_at'),
+        }
+
+        return ordered_data

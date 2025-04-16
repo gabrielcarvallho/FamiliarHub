@@ -51,3 +51,28 @@ class CustomerSerializer(serializers.ModelSerializer):
         ]
 
         return {field: representation.get(field) for field in ordered_fields if field in representation}
+
+class CustomerCustomSerializer(serializers.ModelSerializer):
+    contact = ContactSerializer()
+
+    class Meta:
+        model = Customer
+        fields = ['id', 'company_name', 'brand_name', 'cnpj', 'phone_number', 'email', 'state_tax_registration', 'contact', 'created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        ordered_fields = [
+            'id',
+            'company_name',
+            'brand_name',
+            'cnpj',
+            'phone_number',
+            'email',
+            'state_tax_registration',
+            'contact',
+            'created_at',
+            'updated_at'
+        ]
+
+        return {field: representation.get(field) for field in ordered_fields if field in representation}

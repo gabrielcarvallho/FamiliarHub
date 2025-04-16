@@ -28,7 +28,12 @@ class CustomerService(metaclass=ServiceBase):
         return self.__repository.get_by_id(customer_id)
     
     def get_customers_by_user(self, user):
-        return self.__repository.get_by_user(user.id)
+        customers = self.__repository.get_by_user(user.id)
+
+        if not customers:
+            raise NotFound('No customers found.')
+        
+        return customers
 
     def get_all_customers(self):
         customers = self.__repository.get_all()

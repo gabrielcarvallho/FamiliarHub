@@ -27,7 +27,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
             'id': representation.get('id'),
             'product': ProductSerializer(instance.product).data,
             'quantity': representation.get('quantity'),
-            'total_price': instance.total_price
+            'total_price': f"{instance.total_price:.2f}"
         }
 
         return ordered_data

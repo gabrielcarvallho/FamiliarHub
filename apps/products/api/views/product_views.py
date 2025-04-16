@@ -18,19 +18,19 @@ class ProductView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = ProductService()
+        self.__service = ProductService()
 
     def get(self, request):
         product_id = request.query_params.get('id', None)
 
         if 'list' in request.GET:
-            products = self.service.get_all_products()
+            products = self.__service.get_all_products()
             response = self.serializer_class(products, many=True)
 
             return Response({'products': response.data}, status=status.HTTP_200_OK)
         
         if product_id:
-            product = self.service.get_product(product_id)
+            product = self.__service.get_product(product_id)
             response = self.serializer_class(product)
 
             return Response({'product': response.data}, status=status.HTTP_200_OK)
@@ -41,7 +41,7 @@ class ProductView(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            product = self.service.create_product(**serializer.validated_data)
+            product = self.__service.create_product(**serializer.validated_data)
             response = self.serializer_class(product)
 
             return Response({'product': response.data}, status=status.HTTP_200_OK)
@@ -52,11 +52,11 @@ class ProductView(APIView):
         product_id = request.data.get('id')
 
         if product_id:
-            product = self.service.get_product(product_id)
+            product = self.__service.get_product(product_id)
             serializer = self.serializer_class(instance=product, data=request.data, partial=True)
 
             if serializer.is_valid():
-                updated_product = self.service.update_product(product, **serializer.validated_data)
+                updated_product = self.__service.update_product(product, **serializer.validated_data)
                 response = self.serializer_class(updated_product)
 
                 return Response({'product': response.data}, status=status.HTTP_200_OK)
@@ -69,7 +69,7 @@ class ProductView(APIView):
         product_id = request.query_params.get('id', None)
 
         if product_id:
-            self.service.delete_product(product_id)
+            self.__service.delete_product(product_id)
             return Response({'detail': 'Product deleted successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': 'Product ID is required.'}, status=status.HTTP_400_BAD_REQUEST)

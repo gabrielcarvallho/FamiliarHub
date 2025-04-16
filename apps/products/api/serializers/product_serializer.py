@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import serializers
 from apps.products.models import Product
 
@@ -18,7 +19,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id': representation.get('id'),
             'name': representation.get('name'),
             'price': representation.get('price'),
-            'weight': representation.get('weight'),
+            'weight': f"{representation.get('weight')}g",
             'batch_packages': representation.get('batch_packages'),
             'created_at': representation.get('created_at'),
             'updated_at': representation.get('updated_at')

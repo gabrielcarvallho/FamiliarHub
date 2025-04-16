@@ -27,6 +27,14 @@ class CustomerService(metaclass=ServiceBase):
         
         return self.__repository.get_by_id(customer_id)
     
+    def get_customers_by_user(self, user):
+        customers = self.__repository.get_by_user(user.id)
+
+        if not customers:
+            raise NotFound('No customers found.')
+        
+        return customers
+
     def get_all_customers(self):
         customers = self.__repository.get_all()
 
@@ -36,14 +44,15 @@ class CustomerService(metaclass=ServiceBase):
         return customers
 
     @transaction.atomic
-    def create_customer(self, **data):
+    def create_customer(self, request, **data):
         cnpj = data.get('cnpj')
         contact_data = data.pop('contact')
         address_data = data.pop('billing_address')
 
         if self.__repository.exists_by_cnpj(cnpj):
             raise ValidationError('This CNPJ is already in use.')
-
+        
+        data['created_by_id'] = request.user.id
         customer = self.__repository.create(data)
 
         contact_data['customer_id'] = customer.id

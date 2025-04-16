@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from apps.customers.utils import fields
 from apps.customers.models import Customer
+from apps.accounts.api.serializers import CustomUserResponseSerializer
 from apps.customers.api.serializers import ContactSerializer, AddressSerializer
 
     
@@ -14,13 +15,15 @@ class CustomerSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, required=False)
     billing_address = AddressSerializer(write_only=True)
 
+    created_by = CustomUserResponseSerializer(required=False)
+
     class Meta:
         model = Customer
         fields = [
             'id', 'company_name', 'brand_name', 'cnpj', 'phone_number', 'email', 
-            'state_tax_registration', 'addresses', 'contact', 'billing_address', 'created_at', 'updated_at'
+            'state_tax_registration', 'addresses', 'contact', 'billing_address', 'created_by', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'addresses']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'addresses', 'created_by']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -41,6 +44,32 @@ class CustomerSerializer(serializers.ModelSerializer):
             'email',
             'state_tax_registration',
             'billing_address' if is_list_view else 'addresses',
+            'contact',
+            'created_by',
+            'created_at',
+            'updated_at'
+        ]
+
+        return {field: representation.get(field) for field in ordered_fields if field in representation}
+
+class CustomerCustomSerializer(serializers.ModelSerializer):
+    contact = ContactSerializer()
+
+    class Meta:
+        model = Customer
+        fields = ['id', 'company_name', 'brand_name', 'cnpj', 'phone_number', 'email', 'state_tax_registration', 'contact', 'created_at', 'updated_at']
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        ordered_fields = [
+            'id',
+            'company_name',
+            'brand_name',
+            'cnpj',
+            'phone_number',
+            'email',
+            'state_tax_registration',
             'contact',
             'created_at',
             'updated_at'

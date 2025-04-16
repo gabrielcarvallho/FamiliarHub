@@ -1,6 +1,7 @@
 from apps.accounts.api.serializers import (
     CustomUserResponseSerializer, 
-    CustomUserRequestSerializer
+    CustomUserRequestSerializer,
+    GroupSerializer
 )
 
 from rest_framework import status
@@ -22,18 +23,18 @@ class CustomUserView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = UserService()
+        self.__service = UserService()
 
     def get(self, request):
         user_id = request.query_params.get('id', None)
 
         if 'list' in request.GET:
-            users = self.service.get_all_users(request)
+            users = self.__service.get_all_users(request)
             serializer = CustomUserResponseSerializer(users, many=True)
             
             return Response({'users': serializer.data}, status=status.HTTP_200_OK)
         
-        user = self.service.get_user_by_id(request, user_id)
+        user = self.__service.get_user_by_id(request, user_id)
         serializer = CustomUserResponseSerializer(user)
 
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
@@ -54,7 +55,7 @@ class CustomUserView(APIView):
         serializer = self.serializer_class(data=request_data)
 
         if serializer.is_valid():
-            self.service.create_user(serializer.validated_data)
+            self.__service.create_user(serializer.validated_data)
             return Response({'user': serializer.validated_data}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -63,7 +64,7 @@ class CustomUserView(APIView):
         user_id = request.query_params.get('id', None)
 
         if user_id:
-            self.service.delete_user(user_id)
+            self.__service.delete_user(user_id)
             return Response({'detail': 'User deleted successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': 'User ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -77,23 +78,29 @@ class InviteUserView(APIView):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = UserService()
+        self.__service = UserService()
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            self.service.invite_user(serializer.validated_data)
+            self.__service.invite_user(serializer.validated_data)
             return Response({'detail': 'User invited successfully.'}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class GroupListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, UserPermission]
+    serializer_class = GroupSerializer
+
+    permission_app_label  = 'accounts'
+    permission_model = 'customuser'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = GroupService()
+        self.__service = GroupService()
 
     def get(self, request):
-        groups = self.service.get_all_groups(request)
-        return Response({'groups': groups}, status=status.HTTP_200_OK)
+        groups = self.__service.get_all_groups(request)
+        response = self.serializer_class(groups, many=True)
+
+        return Response({'groups': response.data}, status=status.HTTP_200_OK)

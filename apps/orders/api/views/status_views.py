@@ -24,4 +24,4 @@ class StatusView(APIView):
         order_status = self.__service.get_all_status()
         response = self.serializer_class(order_status, many=True)
 
-        return Response({'payment_methods': response.data}, status=status.HTTP_200_OK)
+        return Response({'order_status': response.data}, status=status.HTTP_200_OK)

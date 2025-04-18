@@ -14,12 +14,3 @@ class Product(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-class Inventory(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    date = models.DateField()
-    quantity = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        unique_together = ('product', 'date')

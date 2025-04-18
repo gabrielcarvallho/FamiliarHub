@@ -6,6 +6,9 @@ class ProductRepository:
     def exists_by_id(self, product_id: uuid.UUID) -> bool:
         return Product.objects.filter(id=product_id).exists()
     
+    def get_existing_ids(self, product_ids: list[uuid.UUID]):
+        return Product.objects.filter(id__in=product_ids).values_list('id', flat=True)
+    
     def get_by_id(self, product_id: uuid.UUID) -> Product:
         return Product.objects.get(id=product_id)
     

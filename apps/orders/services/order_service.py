@@ -19,6 +19,7 @@ class OrderService(metaclass=ServiceBase):
             payment_repository = PaymentRepository(),
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
+            product_repository=ProductRepository(),
             product_order_repository = ProductOrderRepository(),
 
             inventory_service = InventoryService()
@@ -29,6 +30,7 @@ class OrderService(metaclass=ServiceBase):
         self.__payment_repository = payment_repository
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
+        self.__product_repository = product_repository
         self.__product_order_repository = product_order_repository
 
         self.__inventory_service = inventory_service
@@ -91,6 +93,13 @@ class OrderService(metaclass=ServiceBase):
         #order = self.__repository.create(data)
 
         consumed_map, remaining_map = self.__inventory_service.consume_inventory(products, delivery_date)
+
+        for product in products:
+            product_id = product['product_id']
+            remaining = remaining_map.get(product_id, 0)
+
+            if remaining > 0:
+                product = self.__product_repository.get_by_id(product_id)
 
             #product['order_id'] = order.id
             #self.__product_order_repository.create(product)

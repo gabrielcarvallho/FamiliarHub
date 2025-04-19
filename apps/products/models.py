@@ -8,8 +8,8 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=5, decimal_places=2)
     weight = models.DecimalField(max_digits=5, decimal_places=2)
 
-    batch_packages = models.IntegerField(default=0)
-    batch_per_days = models.IntegerField(default=0)
+    daily_capacity = models.IntegerField(default=0)
+    max_orders_day = models.IntegerField(default=1)
     production_days = models.IntegerField(default=1)
 
     created_at = models.DateTimeField(auto_now_add=True)

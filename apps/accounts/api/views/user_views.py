@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from apps.core.utils.permissions import UserPermission
+from apps.core.utils.pagination import CustomPagination
 from apps.accounts.services import AuthService, UserService, GroupService
 
 
@@ -30,9 +31,12 @@ class CustomUserView(APIView):
 
         if 'list' in request.GET:
             users = self.__service.get_all_users(request)
-            serializer = CustomUserResponseSerializer(users, many=True)
-            
-            return Response({'users': serializer.data}, status=status.HTTP_200_OK)
+
+            paginator = CustomPagination()
+            page = paginator.paginate_queryset(users, request)
+
+            serializer = CustomUserResponseSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data, resource_name='users')
         
         user = self.__service.get_user_by_id(request, user_id)
         serializer = CustomUserResponseSerializer(user)

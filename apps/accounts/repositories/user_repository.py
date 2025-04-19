@@ -10,7 +10,7 @@ class UserRepository:
         return CustomUser.objects.get(id=user_id)
         
     def get_all(self) -> list[CustomUser]:
-        return CustomUser.objects.all()
+        return CustomUser.objects.all().order_by('date_joined')
     
     def create(self, user_data: dict) -> CustomUser:
         return CustomUser.objects.create_user(**user_data)

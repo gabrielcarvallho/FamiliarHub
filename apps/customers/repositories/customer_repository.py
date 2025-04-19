@@ -21,7 +21,7 @@ class CustomerRepository:
                 queryset=Address.objects.filter(is_billing_address=True),
                 to_attr='billing_address'
             )
-        ).filter(created_by_id=user_id)
+        ).filter(created_by_id=user_id).order_by('company_name')
 
     def get_all(self) -> list[Customer]:
         return Customer.objects.prefetch_related(
@@ -31,7 +31,7 @@ class CustomerRepository:
                 queryset=Address.objects.filter(is_billing_address=True),
                 to_attr='billing_address'
             )
-        ).all()
+        ).all().order_by('company_name')
     
     def create(self, customer_data: dict) -> Customer:
         return Customer.objects.create(**customer_data)

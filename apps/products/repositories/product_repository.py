@@ -10,7 +10,7 @@ class ProductRepository:
         return Product.objects.get(id=product_id)
     
     def get_all(self) -> list[Product]:
-        return Product.objects.all()
+        return Product.objects.all().order_by('name')
     
     def create(self, product_data: dict) -> Product:
         return Product.objects.create(**product_data)

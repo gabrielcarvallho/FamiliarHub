@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from apps.core.utils.pagination import CustomPagination
 from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 
 from apps.customers.services import CustomerService
@@ -24,11 +25,14 @@ class CustomerView(APIView):
         customer_id = request.query_params.get('id', None)
 
         if 'list' in request.GET:
+            paginator = CustomPagination()
+
             if request.user.is_admin:
                 customers = self.__service.get_all_customers()
-                response = self.serializer_class(customers, many=True)
+                page = paginator.paginate_queryset(customers, request)
 
-                return Response({'customers': response.data}, status=status.HTTP_200_OK)
+                response = self.serializer_class(page, many=True)
+                return paginator.get_paginated_response(response.data, resource_name='customers')
             else:
                 customers = self.__service.get_customers_by_user(request.user)
                 response = self.serializer_class(customers, many=True)

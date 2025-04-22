@@ -6,13 +6,7 @@ from apps.accounts.api.serializers import GroupSerializer
 
 
 class CustomUserRequestSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(
-            queryset=CustomUser.objects.all(), 
-            message="This email is already in use."
-        )]
-    )
+    email = serializers.EmailField(required=True)
 
     password = serializers.CharField(
         write_only=True,
@@ -21,28 +15,21 @@ class CustomUserRequestSerializer(serializers.ModelSerializer):
         min_length=8
     )
 
-    group = serializers.PrimaryKeyRelatedField(
-        queryset=Group.objects.all(),
-        required=False,
-        allow_null=True,
-        error_messages={
-            'does_not_exist': 'Group not found.'
-        }
-    )
+    group_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = CustomUser
-        fields = ['email', 'password', 'is_admin', 'group']
+        fields = ['email', 'password', 'is_admin', 'group_id']
 
     def validate(self, attrs):
         is_admin = attrs.get('is_admin', False)
-        group = attrs.get('group')
+        group_id = attrs.get('group_id')
         
-        if not is_admin and not group:
-            raise serializers.ValidationError({"group": "A group is required when is_admin is False."})
+        if not is_admin and not group_id:
+            raise serializers.ValidationError({"group_id": "A group is required when is_admin is False."})
         
-        if is_admin and group:
-            raise serializers.ValidationError({"group": "Group is not allowed for admin users."})
+        if is_admin and group_id:
+            raise serializers.ValidationError({"group_id": "Group is not allowed for admin users."})
 
         return attrs
 

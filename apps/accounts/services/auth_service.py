@@ -1,12 +1,12 @@
 import jwt
 from django.conf import settings
 
-from apps.core.services import ServiceBase
-
 from rest_framework.exceptions import AuthenticationFailed
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+
+from apps.core.services import ServiceBase
 
 
 class AuthService(metaclass=ServiceBase):

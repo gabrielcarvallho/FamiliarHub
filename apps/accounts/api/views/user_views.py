@@ -33,7 +33,7 @@ class CustomUserView(APIView):
             serializer = CustomUserResponseSerializer(page, many=True)
             return paginator.get_paginated_response(serializer.data, resource_name='users')
         
-        user = self.__service.get_user_by_id(request, user_id)
+        user = self.__service.get_user(request, user_id)
         serializer = CustomUserResponseSerializer(user)
 
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
@@ -67,22 +67,3 @@ class CustomUserView(APIView):
             return Response({'detail': 'User deleted successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': 'User ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-class InviteUserView(APIView):
-    permission_classes = [IsAuthenticated, UserPermission]
-    serializer_class = CustomUserRequestSerializer
-
-    permission_app_label  = 'accounts'
-    permission_model = 'customuser'
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.__service = UserService()
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            self.__service.invite_user(serializer.validated_data)
-            return Response({'detail': 'User invited successfully.'}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

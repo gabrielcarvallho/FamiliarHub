@@ -1,4 +1,7 @@
 import uuid
+from datetime import timedelta
+from django.utils import timezone
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Group
 
@@ -58,9 +61,24 @@ class CustomUserInvitation(models.Model):
     email = models.EmailField()
     token = models.CharField(max_length=255, unique=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invitations_sent')
-    created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField()
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
     accepted = models.BooleanField(default=False)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    expire_at = models.DateTimeField()
 
     class Meta:
         db_table = 'accounts_user_invitation'
+    
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = uuid.uuid4().hex
+        
+        if not self.expire_at:
+            self.expire_at = timezone.now() + timedelta(hours=48)
+            
+        return super().save(*args, **kwargs)
+    
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expire_at

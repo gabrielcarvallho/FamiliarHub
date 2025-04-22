@@ -4,40 +4,39 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
-from apps.accounts.repositories import UserRepository
-from apps.core.services import ServiceBase, EmailService
+from apps.core.services import ServiceBase
+from apps.accounts.repositories import UserRepository, GroupRepository
 
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 
 
 class UserService(metaclass=ServiceBase):
-    def __init__(self):
-        self.user_repository = UserRepository()
-        self.group_repository = GroupRepository()
+    def __init__(
+            self,
+            repository=UserRepository(),
+            group_repository=GroupRepository()
+        ):
 
-        self.email_service = EmailService()
+        self.__repository = repository
+        self.__group_repository = group_repository
 
-    def get_user_by_id(self, request, user_id=None):
+    def get_user(self, request, user_id=None):
         if user_id:
             if not request.user.is_admin:
                 raise PermissionDenied('You do not have permission to access this resource.')
             
-            if not self.user_repository.exists_by_id(user_id):
+            if not self.__repository.exists_by_id(user_id):
                 raise NotFound('User not found.')
 
-            return self.user_repository.get_by_id(user_id)
+            return self.__repository.get_by_id(user_id)
         else:
             return request.user
     
     def get_all_users(self, request):
         if not request.user.is_admin:
             raise PermissionDenied('You do not have permission to access this resource.')
-        
-        users = self.user_repository.get_all()
-        if not users:
-            raise NotFound('No users found.')
 
-        return users
+        return self.__repository.get_all()
 
     def invite_user(self, data):
         email = data.get('email')
@@ -54,7 +53,7 @@ class UserService(metaclass=ServiceBase):
         self.email_service.send_invitation_email(email, token)
 
     @transaction.atomic
-    def create_user(self, data):
+    def create_user(self, **data):
         is_admin = data.get('is_admin', False)
         group = data.pop('group', None)
 

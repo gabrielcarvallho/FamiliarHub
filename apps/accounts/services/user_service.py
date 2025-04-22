@@ -4,8 +4,8 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from apps.accounts.repositories import UserRepository
 from apps.core.services import ServiceBase, EmailService
-from apps.accounts.repositories.user_repository import UserRepository, GroupRepository
 
 from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 
@@ -43,9 +43,6 @@ class UserService(metaclass=ServiceBase):
         email = data.get('email')
         is_admin = data.get('is_admin', False)
         group = data.pop('group', None)
-
-        if not is_admin and group.name == 'admin':
-            raise ValidationError('Non-admin users cannot be assigned to the admin group.')
         
         payload = {
             'is_admin': is_admin,
@@ -77,17 +74,3 @@ class UserService(metaclass=ServiceBase):
             raise NotFound('User not found.')
 
         self.user_repository.delete(user_id)
-
-class GroupService(metaclass=ServiceBase):
-    def __init__(self):
-        self.group_repository = GroupRepository()
-
-    def get_all_groups(self, request):
-        if not request.user.is_admin:
-            raise PermissionDenied('You do not have permission to access this resource.')
-        
-        groups = self.group_repository.get_all()
-        if not groups:
-            raise NotFound('No groups found.')
-
-        return list(groups)

@@ -1,6 +1,5 @@
 import uuid
 from django.db import models
-from django.utils.crypto import get_random_string
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Group
 
 
@@ -38,13 +37,6 @@ class CustomUser(AbstractBaseUser):
     def clean(self):
         super().clean()
     
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.password = get_random_string(length=12)
-            self.set_password(self.password)
-
-        super().save(*args, **kwargs)
-    
     def has_perm(self, perm, obj=None):
         if getattr(self, 'is_admin', False):
             return True
@@ -60,3 +52,15 @@ class CustomUser(AbstractBaseUser):
             )
         else:
             return any(perm in group.get_all_permissions() for group in self.groups.all())
+        
+class CustomUserInvitation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField()
+    token = models.CharField(max_length=255, unique=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invitations_sent')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'accounts_user_invitation'

@@ -1,5 +1,5 @@
 import uuid
-from apps.accounts.models import CustomUser, Group
+from apps.accounts.models import CustomUser
 
 
 class UserRepository:
@@ -17,13 +17,3 @@ class UserRepository:
     
     def delete(self, user_id: uuid.UUID) -> None:
         CustomUser.objects.filter(id=user_id).delete()
-    
-class GroupRepository:
-    def exists_by_id(self, group_id: uuid.UUID) -> bool:
-        return Group.objects.filter(id=group_id).exists()
-    
-    def get_all(self) -> list[Group]:
-        return Group.objects.exclude(name='admin').all()
-    
-    def get_admin_group(self) -> Group:
-        return Group.objects.get(name='admin')

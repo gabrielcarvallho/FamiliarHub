@@ -8,7 +8,7 @@ class InventoryRepository:
         return Inventory.objects.filter(
             product_id__in=product_ids,
             date__lte=date
-        ).order_by('product_id', 'date')
+        ).order_by('product_id', '-date')
     
     def bulk_update(self, inventory_data: list[Inventory]):
         if inventory_data:

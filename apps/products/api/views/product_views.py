@@ -7,6 +7,7 @@ from apps.products.services import ProductService
 from apps.products.api.serializers import ProductSerializer
 
 from apps.core.utils.permissions import UserPermission
+from apps.core.utils.pagination import CustomPagination
 
 
 class ProductView(APIView):
@@ -25,9 +26,12 @@ class ProductView(APIView):
 
         if 'list' in request.GET:
             products = self.__service.get_all_products()
-            response = self.serializer_class(products, many=True)
 
-            return Response({'products': response.data}, status=status.HTTP_200_OK)
+            paginator = CustomPagination()
+            page = paginator.paginate_queryset(products, request)
+
+            response = self.serializer_class(page, many=True)
+            return paginator.get_paginated_response(response.data, resource_name='products')
         
         if product_id:
             product = self.__service.get_product(product_id)

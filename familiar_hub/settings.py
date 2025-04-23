@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 
+    'apps.core',
     'apps.accounts',
     'apps.customers',
     'apps.products',
@@ -139,11 +140,19 @@ CSRF_COOKIE_DOMAIN = COOKIE_DOMAIN
 SESSION_COOKIE_SECURE = COOKIE_SECURE
 CSRF_COOKIE_SECURE = COOKIE_SECURE
 
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'America/Sao_Paulo'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS')
-EMAIL_PORT = os.getenv('EMAIL_PORT')
-EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
 
 FRONTEND_URL = os.getenv('FRONTEND_URL')

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.customers.utils import fields
 from apps.customers.models import Customer
-from apps.accounts.api.serializers import CustomUserResponseSerializer
+from apps.accounts.api.serializers import CustomUserSerializer
 from apps.customers.api.serializers import ContactSerializer, AddressSerializer
 
     
@@ -15,7 +15,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, required=False)
     billing_address = AddressSerializer(write_only=True)
 
-    created_by = CustomUserResponseSerializer(required=False)
+    created_by = CustomUserSerializer(required=False)
 
     class Meta:
         model = Customer

@@ -4,6 +4,7 @@ from apps.accounts.api.views import (
     CustomTokenRefreshView,
     CustomTokenLogoutView,
     UserInvitationView,
+    UserInvitationAcceptedView,
     CustomUserView,
     GroupListView,
 )
@@ -17,5 +18,6 @@ urlpatterns = [
     path('users/', CustomUserView.as_view(), name='user'),
     path('groups/', GroupListView.as_view(), name='groups'),
 
-    path('users/invitation/', UserInvitationView.as_view(), name='invite_user'),
+    path('users/invitation/', UserInvitationView.as_view(), name='invitation_user'),
+    path('users/invitation/accepted/', UserInvitationAcceptedView.as_view(), name='invitation_accepted')
 ]

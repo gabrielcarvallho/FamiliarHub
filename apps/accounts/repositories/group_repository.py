@@ -9,6 +9,3 @@ class GroupRepository:
     
     def get_all(self) -> QuerySet[Group]:
         return Group.objects.exclude(name='admin').all()
-    
-    def get_admin_group(self) -> QuerySet[Group]:
-        return Group.objects.get(name='admin')

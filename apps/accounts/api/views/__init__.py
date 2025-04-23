@@ -1,6 +1,6 @@
 from .group_views import GroupListView
 from .user_views import CustomUserView
-from .invitation_views import UserInvitationView
+from .invitation_views import UserInvitationView, UserInvitationAcceptedView
 from .auth_views import CustomTokenObtainPairView, CustomTokenRefreshView, CustomTokenLogoutView
 
 __all__ = [
@@ -9,5 +9,6 @@ __all__ = [
     'CustomTokenLogoutView',
     'CustomUserView',
     'GroupListView',
-    'UserInvitationView'
+    'UserInvitationView',
+    'UserInvitationAcceptedView'
 ]

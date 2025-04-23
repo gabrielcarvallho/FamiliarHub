@@ -1,18 +1,18 @@
-from apps.accounts.api.serializers import CustomUserResponseSerializer, CustomUserRequestSerializer
+from apps.accounts.api.serializers import CustomUserSerializer
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from apps.accounts.services import UserService
 from apps.core.utils.permissions import UserPermission
 from apps.core.utils.pagination import CustomPagination
-from apps.accounts.services import AuthService, UserService
 
 
 class CustomUserView(APIView):
     permission_classes = [IsAuthenticated, UserPermission]
-    serializer_class = CustomUserRequestSerializer
+    serializer_class = CustomUserSerializer
 
     permission_app_label  = 'accounts'
     permission_model = 'customuser'
@@ -30,34 +30,13 @@ class CustomUserView(APIView):
             paginator = CustomPagination()
             page = paginator.paginate_queryset(users, request)
 
-            serializer = CustomUserResponseSerializer(page, many=True)
+            serializer = self.serializer_class(page, many=True)
             return paginator.get_paginated_response(serializer.data, resource_name='users')
         
         user = self.__service.get_user(request, user_id)
-        serializer = CustomUserResponseSerializer(user)
+        serializer = self.serializer_class(user)
 
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
-    
-    def post(self, request):
-        auth_service = AuthService()
-
-        token = request.query_params.get('token')
-        if not token:
-            return Response({'detail': 'Token is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        payload = auth_service.token_decode(token)
-        request_data = request.data.copy()
-
-        request_data['is_admin'] = payload.get('is_admin')
-        request_data['group'] = payload.get('group')
-
-        serializer = self.serializer_class(data=request_data)
-
-        if serializer.is_valid():
-            self.__service.create_user(serializer.validated_data)
-            return Response({'user': serializer.validated_data}, status=status.HTTP_200_OK)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
         user_id = request.query_params.get('id', None)

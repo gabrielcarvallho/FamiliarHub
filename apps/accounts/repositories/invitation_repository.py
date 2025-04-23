@@ -34,5 +34,9 @@ class UserInvitationRepository:
         obj.save()
         return obj
     
+    def mark_as_accepted(self, obj: CustomUserInvitation) -> None:
+        obj.accepted = True
+        obj.save()
+    
     def delete(self, invitation_id: uuid.UUID) -> None:
         CustomUserInvitation.objects.filter(id=invitation_id).delete()

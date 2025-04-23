@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from apps.core.services import ServiceBase, EmailService
 from apps.accounts.repositories import UserRepository, UserInvitationRepository, GroupRepository
 
@@ -22,13 +24,14 @@ class UserInvitationService(metaclass=ServiceBase):
     
     def get_invitation(self, token):
         if not self.__repository.exists_by_token(token):
-            raise ValidationError('Token not found.')
+            raise ValidationError('Invitation not found.')
         
         return self.__repository.get_by_token(token)
     
     def get_not_accepted(self, request):
         return self.__repository.get_not_accepted(request.user.id)
-        
+
+    @transaction.atomic  
     def create_invitation(self, created_by, **data):
         email = data.get('email')
         group_id = data.get('group_id', None)
@@ -60,8 +63,39 @@ class UserInvitationService(metaclass=ServiceBase):
         if invitation.accepted:
             raise ValidationError('Invitation link has already been accepted.')
         
-        if invitation.is_expired:
-            raise ValidationError('Invitation expired.')
-        
         self.__repository.update(invitation)
         self.__email_service.send_invitation_email(invitation.email, invitation.token)
+    
+    @transaction.atomic
+    def accept_invitation(self, token, **data):
+        email = data.get('email')
+        password = data.get('password')
+        confirm_password = data.pop('confirm_password')
+
+        if not self.__repository.exists_by_token(token):
+            raise NotFound('Invitation not found.')
+        
+        invitation = self.__repository.get_by_token(token)
+
+        if invitation.accepted:
+            raise ValidationError('The invitation has already been accepted.')
+        
+        if invitation.is_expired:
+            self.__repository.delete(invitation.id)
+            raise ValidationError('Invitation expired.')
+        
+        if email != invitation.email:
+            raise ValidationError('E-mail addresses do not match.')
+
+        if confirm_password != password:
+            raise ValidationError('Passwords do not match.')
+        
+        if not invitation.group:
+            data['is_admin'] = True
+        
+        user = self.__user_repository.create(data)
+
+        if invitation.group:
+            user.groups.set([invitation.group])
+            
+        self.__repository.mark_as_accepted(invitation)

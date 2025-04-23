@@ -52,22 +52,6 @@ class UserService(metaclass=ServiceBase):
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
         self.email_service.send_invitation_email(email, token)
 
-    @transaction.atomic
-    def create_user(self, **data):
-        is_admin = data.get('is_admin', False)
-        group = data.pop('group', None)
-
-        if is_admin:
-            group = self.group_repository.get_admin_group()
-        else:
-            if group.name == 'admin':
-                raise ValidationError('Non-admin users cannot be assigned to the admin group.')
-
-        user = self.user_repository.create(data)
-        user.groups.set([group])
-        
-        return user
-    
     def delete_user(self, user_id):
         if not self.user_repository.exists_by_id(user_id):
             raise NotFound('User not found.')

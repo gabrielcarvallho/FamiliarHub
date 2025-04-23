@@ -7,7 +7,7 @@ from django.utils import timezone
 from apps.core.services import ServiceBase
 from apps.accounts.repositories import UserRepository, GroupRepository
 
-from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError, NotFound
 
 
 class UserService(metaclass=ServiceBase):

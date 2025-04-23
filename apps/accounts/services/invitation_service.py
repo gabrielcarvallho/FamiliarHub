@@ -1,7 +1,7 @@
-from apps.core.services import ServiceBase
+from apps.core.services import ServiceBase, EmailService
 from apps.accounts.repositories import UserRepository, UserInvitationRepository, GroupRepository
 
-from rest_framework.exceptions import ValidationError, NotFound
+from rest_framework.exceptions import PermissionDenied, ValidationError, NotFound
 
 
 class UserInvitationService(metaclass=ServiceBase):
@@ -9,14 +9,27 @@ class UserInvitationService(metaclass=ServiceBase):
             self,
             repository=UserInvitationRepository(),
             user_repository=UserRepository(),
-            group_repository=GroupRepository()
+            group_repository=GroupRepository(),
+
+            email_service=EmailService()
         ):
         
         self.__repository = repository
         self.__user_repository = user_repository
         self.__group_repository = group_repository
+
+        self.__email_service = email_service
+    
+    def get_invitation(self, token):
+        if not self.__repository.exists_by_token(token):
+            raise ValidationError('Token not found.')
         
-    def create_invite(self, created_by, **data):
+        return self.__repository.get_by_token(token)
+    
+    def get_not_accepted(self, request):
+        return self.__repository.get_not_accepted(request.user.id)
+        
+    def create_invitation(self, created_by, **data):
         email = data.get('email')
         group_id = data.get('group_id', None)
         is_admin = data.pop('is_admin', None)
@@ -38,4 +51,17 @@ class UserInvitationService(metaclass=ServiceBase):
         data['created_by_id'] = created_by.id
         invitation = self.__repository.create(data)
 
-        return invitation.token
+        self.__email_service.send_invitation_email(email, invitation.token)
+
+    def resend_invitation(self, invitation, request):
+        if not invitation.created_by.id == request.user.id:
+            raise PermissionDenied('You do not have permission to access this resource.')
+        
+        if invitation.accepted:
+            raise ValidationError('Invitation link has already been accepted.')
+        
+        if invitation.is_expired:
+            raise ValidationError('Invitation expired.')
+        
+        self.__repository.update(invitation)
+        self.__email_service.send_invitation_email(invitation.email, invitation.token)

@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.customers',
     'apps.products',
+    'apps.logistics',
     'apps.orders'
 ]
 
@@ -75,7 +76,7 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_DOMAIN': COOKIE_DOMAIN,
     'AUTH_COOKIE_SECURE': True,
     'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_SAMESITE': 'None',
+    'AUTH_COOKIE_SAMESITE': 'Lax' if COOKIE_SECURE else 'None',
 }
 
 MIDDLEWARE = [

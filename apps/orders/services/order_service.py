@@ -1,6 +1,8 @@
+from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
+from apps.logistics.services import InventoryService
 
 from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
@@ -18,7 +20,9 @@ class OrderService(metaclass=ServiceBase):
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
             product_repository=ProductRepository(),
-            product_order_repository = ProductOrderRepository()
+            product_order_repository = ProductOrderRepository(),
+
+            inventory_service = InventoryService()
         ):
 
         self.__repository = repository
@@ -28,6 +32,8 @@ class OrderService(metaclass=ServiceBase):
         self.__address_repository = address_repository
         self.__product_repository = product_repository
         self.__product_order_repository = product_order_repository
+
+        self.__inventory_service = inventory_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
@@ -47,16 +53,18 @@ class OrderService(metaclass=ServiceBase):
         orders = self.__repository.get_all()
 
         if not orders:
-            raise NotFound
+            raise NotFound('No orders found.')
         
         return orders
 
+    @transaction.atomic
     def create_order(self, request, **data):
         customer_id = data.get('customer_id')
         status_id = data.get('order_status_id')
         payment_id = data.get('payment_method_id')
         delivery_address_id = data.get('delivery_address_id', None)
         new_delivery_address = data.pop('delivery_address', None)
+        delivery_date = data['delivery_date']
         products = data.pop('products')
 
         if not self.__customer_repository.exists_by_id(customer_id):
@@ -82,13 +90,16 @@ class OrderService(metaclass=ServiceBase):
             data['delivery_address_id'] = address.id
         
         data['created_by_id'] = request.user.id
-        order = self.__repository.create(data)
-        
-        for product in products:
-            product_id = product.get('product_id')
+        #order = self.__repository.create(data)
 
-            if not self.__product_repository.exists_by_id(product_id):
-                raise NotFound('Product not found.')
-            
-            product['order_id'] = order.id
-            self.__product_order_repository.create(product)
+        consumed_map, remaining_map = self.__inventory_service.consume_inventory(products, delivery_date)
+
+        for product in products:
+            product_id = product['product_id']
+            remaining = remaining_map.get(product_id, 0)
+
+            if remaining > 0:
+                product = self.__product_repository.get_by_id(product_id)
+
+            #product['order_id'] = order.id
+            #self.__product_order_repository.create(product)

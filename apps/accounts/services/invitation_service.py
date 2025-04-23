@@ -46,7 +46,7 @@ class UserInvitationService(metaclass=ServiceBase):
             if existing_invitation.is_expired:
                 self.__repository.delete(existing_invitation.id)
             else:
-                raise ValidationError('There is already a pending invitation for this email.')
+                raise ValidationError('There is already a invitation for this email.')
         
         if not is_admin and not self.__group_repository.exists_by_id(group_id):
             raise NotFound('Group not found.')

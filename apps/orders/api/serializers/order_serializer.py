@@ -2,6 +2,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.orders.models import Order
+from apps.orders.utils.fields import DateField
 from apps.customers.api.serializers import AddressSerializer, CustomerCustomSerializer
 
 from apps.orders.api.serializers import (
@@ -15,7 +16,7 @@ class OrderRequestSerializer(serializers.Serializer):
     customer_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     order_status_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     payment_method_id = serializers.UUIDField(format='hex_verbose', write_only=True)
-    delivery_date = serializers.DateField()
+    delivery_date = DateField()
 
     delivery_address_id = serializers.UUIDField(required=False)
     delivery_address = AddressSerializer(required=False)

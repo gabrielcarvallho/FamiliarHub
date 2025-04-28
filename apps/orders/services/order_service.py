@@ -2,9 +2,8 @@ from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
-from apps.logistics.services import InventoryService
+from apps.logistics.services import InventoryService, ProductionScheduleService
 
-from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
 from apps.orders.repositories.order_repository import OrderRepository
 from apps.orders.repositories import StatusRepository, PaymentRepository
@@ -19,10 +18,10 @@ class OrderService(metaclass=ServiceBase):
             payment_repository = PaymentRepository(),
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
-            product_repository=ProductRepository(),
             product_order_repository = ProductOrderRepository(),
 
-            inventory_service = InventoryService()
+            inventory_service = InventoryService(),
+            production_service = ProductionScheduleService()
         ):
 
         self.__repository = repository
@@ -30,10 +29,10 @@ class OrderService(metaclass=ServiceBase):
         self.__payment_repository = payment_repository
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
-        self.__product_repository = product_repository
         self.__product_order_repository = product_order_repository
 
         self.__inventory_service = inventory_service
+        self.__production_service = production_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
@@ -92,14 +91,7 @@ class OrderService(metaclass=ServiceBase):
         data['created_by_id'] = request.user.id
         #order = self.__repository.create(data)
 
-        consumed_map, remaining_map = self.__inventory_service.consume_inventory(products, delivery_date)
+        consumed, remaining = self.__inventory_service.process_inventory(products)
 
-        for product in products:
-            product_id = product['product_id']
-            remaining = remaining_map.get(product_id, 0)
-
-            if remaining > 0:
-                product = self.__product_repository.get_by_id(product_id)
-
-            #product['order_id'] = order.id
-            #self.__product_order_repository.create(product)
+        if any(qtd > 0 for qtd in remaining.values()):
+            self.__production_service.calculate_production(remaining)

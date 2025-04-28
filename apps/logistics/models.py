@@ -19,7 +19,7 @@ class ProductionSchedule(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='production_order')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="production_schedule")
     production_date = models.DateField()
-    quantity = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField()
 
     class Meta:
         unique_together = ('product', 'order', 'production_date')

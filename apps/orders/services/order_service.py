@@ -94,4 +94,4 @@ class OrderService(metaclass=ServiceBase):
         consumed, remaining = self.__inventory_service.process_inventory(products)
 
         if any(qtd > 0 for qtd in remaining.values()):
-            self.__production_service.calculate_production(remaining)
+            production_schedule = self.__production_service.validate_production(remaining, delivery_date)

@@ -27,6 +27,12 @@ class CustomerService(metaclass=ServiceBase):
         
         return self.__repository.get_by_id(customer_id)
     
+    def get_to_update(self, customer_id):
+        if not self.__repository.exists_by_id(customer_id):
+            raise NotFound('Customer not found.')
+        
+        return self.__repository.filter_by_address(customer_id)
+    
     def get_customers_by_user(self, user):
         customers = self.__repository.get_by_user(user.id)
 
@@ -66,10 +72,17 @@ class CustomerService(metaclass=ServiceBase):
     
     @transaction.atomic
     def update_customer(self, obj, **data):
+        address_data = data.pop('billing_address', None)
         contact_data = data.pop('contact', None)
 
         for attr, value in data.items():
             setattr(obj, attr, value)
+        
+        if address_data:
+            for attr, value in address_data.items():
+                setattr(obj.billing_address[0], attr, value)
+            
+            self.__address_repository.save(obj.billing_address[0])
 
         if contact_data:
             for attr, value in contact_data.items():

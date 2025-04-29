@@ -65,7 +65,7 @@ class CustomerView(APIView):
         customer_id = request.data.get('id')
 
         if customer_id:
-            customer = self.__service.get_customer(customer_id)
+            customer = self.__service.get_to_update(customer_id)
 
             if not IsOwnerOrReadOnly().has_object_permission(request, self, customer):
                 return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)

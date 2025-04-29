@@ -1,5 +1,5 @@
 import uuid
-from django.db.models import Prefetch
+from django.db.models import Prefetch, QuerySet
 from apps.customers.models import Customer, Address
 
 
@@ -10,10 +10,10 @@ class CustomerRepository:
     def exists_by_cnpj(self, cnpj: str) -> bool:
         return Customer.objects.filter(cnpj=cnpj).exists()
     
-    def get_by_id(self, customer_id: uuid.UUID) -> Customer:
+    def get_by_id(self, customer_id: uuid.UUID) -> QuerySet[Customer]:
         return Customer.objects.prefetch_related('contact', 'addresses').get(id=customer_id)
     
-    def get_by_user(self, user_id: uuid.UUID) -> list[Customer]:
+    def get_by_user(self, user_id: uuid.UUID) -> QuerySet[Customer]:
         return Customer.objects.prefetch_related(
             'contact',
             Prefetch(
@@ -23,7 +23,7 @@ class CustomerRepository:
             )
         ).filter(created_by_id=user_id).order_by('company_name')
 
-    def get_all(self) -> list[Customer]:
+    def get_all(self) -> QuerySet[Customer]:
         return Customer.objects.prefetch_related(
             'contact',
             Prefetch(
@@ -33,7 +33,17 @@ class CustomerRepository:
             )
         ).all().order_by('company_name')
     
-    def create(self, customer_data: dict) -> Customer:
+    def filter_by_address(self, customer_id: uuid.UUID) -> QuerySet[Customer]:
+        return Customer.objects.prefetch_related(
+            'contact',
+            Prefetch(
+                'addresses',
+                queryset=Address.objects.filter(is_billing_address=True),
+                to_attr='billing_address'
+            )
+        ).get(id=customer_id)
+
+    def create(self, customer_data: dict) -> QuerySet[Customer]:
         return Customer.objects.create(**customer_data)
     
     def delete(self, customer_id: uuid.UUID) -> None:

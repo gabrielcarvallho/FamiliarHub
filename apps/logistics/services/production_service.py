@@ -32,6 +32,8 @@ class ProductionScheduleService(metaclass=ServiceBase):
             production_map.setdefault(item.product_id, {})[item.production_date] = item.amount
 
         allocations = {}
+        leftovers = {}
+
         for product_id, total_packages in remaining_data.items():
             product = products.get(id=product_id)
 
@@ -80,5 +82,17 @@ class ProductionScheduleService(metaclass=ServiceBase):
 
             if allocated_batches < batches_required:
                 raise ValidationError(f"Unable to allocate production for product {product.name} by delivery date.")
+            
+            total_produced_packages = allocated_batches * product.batch_packages
+            leftover = total_produced_packages - total_packages
+            if leftover > 0:
+                last_date = max(allocations[product_id])
+                leftovers[product_id] = {
+                    'date': last_date,
+                    'quantity': leftover
+                }
 
-        return allocations
+        return {
+            'production_schedule': allocations,
+            'inventory': leftovers
+        }

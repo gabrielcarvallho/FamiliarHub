@@ -17,9 +17,15 @@ class ProductionScheduleService(metaclass=ServiceBase):
         self.__repository = repository
         self.__product_repository = product_repository
     
-    def validate_production(self, remaining_data, delivery_date):
+    def validate_production(self, products_data, delivery_date):
         start_date = timezone.now().date() + timedelta(days=1)
-        product_ids = list(remaining_data.keys())
+        product_ids = [item['product_id'] for item in products_data]
+
+        existing_ids = set(self.__product_repository.get_existing_ids(product_ids))
+        missing_products = [str(pid) for pid in product_ids if pid not in existing_ids]
+
+        if missing_products:
+            raise ValidationError(f"Products not found. {', '.join(missing_products)}")
 
         products = self.__product_repository.filter_by_id(product_ids)
         schedules = self.__repository.filter(
@@ -31,10 +37,12 @@ class ProductionScheduleService(metaclass=ServiceBase):
         for item in schedules:
             production_map.setdefault(item.product_id, {})[item.production_date] = item.amount
 
-        allocations = {}
-        leftovers = {}
+        allocations = []
 
-        for product_id, total_packages in remaining_data.items():
+        for item in products_data:
+            product_id = item['product_id']
+            total_packages = item['quantity']
+
             product = products.get(id=product_id)
 
             batches_required = math.ceil(total_packages / product.batch_packages)
@@ -42,7 +50,6 @@ class ProductionScheduleService(metaclass=ServiceBase):
 
             current_date = start_date
             allocated_batches = 0
-            allocations[product_id] = {}
 
             while current_date <= delivery_date and allocated_batches < batches_required:
                 if current_date.weekday() >= 5:
@@ -64,6 +71,7 @@ class ProductionScheduleService(metaclass=ServiceBase):
                     if check_date.weekday() >= 5 or check_date > delivery_date:
                         can_fit_batch = False
                         break
+
                     used = production_map.get(product_id, {}).get(check_date, 0)
                     if used >= daily_capacity:
                         can_fit_batch = False
@@ -74,7 +82,12 @@ class ProductionScheduleService(metaclass=ServiceBase):
                         prod_date = current_date + timedelta(days=offset)
                         production_map.setdefault(product_id, {})
                         production_map[product_id][prod_date] = production_map[product_id].get(prod_date, 0) + batches_today
-                        allocations[product_id][prod_date] = allocations[product_id].get(prod_date, 0) + batches_today
+
+                        allocations.append({
+                            "product_id": product_id,
+                            "production_date": prod_date,
+                            "batches": batches_today
+                        })
 
                     allocated_batches += batches_today
                 else:
@@ -82,17 +95,5 @@ class ProductionScheduleService(metaclass=ServiceBase):
 
             if allocated_batches < batches_required:
                 raise ValidationError(f"Unable to allocate production for product {product.name} by delivery date.")
-            
-            total_produced_packages = allocated_batches * product.batch_packages
-            leftover = total_produced_packages - total_packages
-            if leftover > 0:
-                last_date = max(allocations[product_id])
-                leftovers[product_id] = {
-                    'date': last_date,
-                    'quantity': leftover
-                }
 
-        return {
-            'production_schedule': allocations,
-            'inventory': leftovers
-        }
+        return allocations

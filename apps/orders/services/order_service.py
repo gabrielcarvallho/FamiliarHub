@@ -2,9 +2,10 @@ from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
-from apps.logistics.services import InventoryService, ProductionScheduleService
+from apps.logistics.services import ProductionScheduleService
 
 from apps.orders.repositories import ProductOrderRepository
+from apps.logistics.repositories import ProductionScheduleRepository
 from apps.orders.repositories.order_repository import OrderRepository
 from apps.orders.repositories import StatusRepository, PaymentRepository
 from apps.customers.repositories import CustomerRepository, AddressRepository
@@ -19,8 +20,8 @@ class OrderService(metaclass=ServiceBase):
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
             product_order_repository = ProductOrderRepository(),
+            production_repository=ProductionScheduleRepository(),
 
-            inventory_service = InventoryService(),
             production_service = ProductionScheduleService()
         ):
 
@@ -29,9 +30,9 @@ class OrderService(metaclass=ServiceBase):
         self.__payment_repository = payment_repository
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
+        self.__production_repository = production_repository
         self.__product_order_repository = product_order_repository
 
-        self.__inventory_service = inventory_service
         self.__production_service = production_service
 
     def get_order(self, order_id):
@@ -41,20 +42,10 @@ class OrderService(metaclass=ServiceBase):
         return self.__repository.get_by_id(order_id)
     
     def get_orders_by_user(self, user):
-        orders = self.__repository.get_by_user(user.id)
-
-        if not orders:
-            raise NotFound('No orders found.')
-        
-        return orders
+        return self.__repository.get_by_user(user.id)
     
     def get_all_orders(self):
-        orders = self.__repository.get_all()
-
-        if not orders:
-            raise NotFound('No orders found.')
-        
-        return orders
+        return self.__repository.get_all()
 
     @transaction.atomic
     def create_order(self, request, **data):
@@ -89,9 +80,15 @@ class OrderService(metaclass=ServiceBase):
             data['delivery_address_id'] = address.id
         
         data['created_by_id'] = request.user.id
-        #order = self.__repository.create(data)
 
-        consumed, remaining = self.__inventory_service.process_inventory(products)
+        production_schedule = self.__production_service.validate_production(products, delivery_date)
 
-        if any(qtd > 0 for qtd in remaining.values()):
-            production_schedule = self.__production_service.validate_production(remaining, delivery_date)
+        order = self.__repository.create(data)
+        for product in products:
+            product['order_id'] = order.id
+        
+        for production in production_schedule:
+            production['order_id'] = order.id
+        
+        self.__product_order_repository.bulk_create(products)
+        self.__production_repository.bulk_create(production_schedule)

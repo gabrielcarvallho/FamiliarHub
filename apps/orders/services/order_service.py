@@ -42,7 +42,14 @@ class OrderService(metaclass=ServiceBase):
         return self.__repository.get_by_id(order_id)
     
     def get_orders_by_user(self, user):
-        return self.__repository.get_by_user(user.id)
+        if not user.groups.filter(name='delivery_person'):
+            return self.__repository.filter(
+                created_by_id=user.id
+            )
+        else:
+            return self.__repository.filter(
+                order_status__identifier=2
+            )
     
     def get_all_orders(self):
         return self.__repository.get_all()

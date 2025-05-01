@@ -27,4 +27,4 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.user.is_admin:
             return True
         
-        return obj.created_by.id == request.user.id
+        return obj.created_by_id == request.user.id

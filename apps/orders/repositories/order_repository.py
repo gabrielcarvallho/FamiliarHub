@@ -11,11 +11,11 @@ class OrderRepository:
     def get_by_id(self, order_id: uuid.UUID) -> QuerySet[Order]:
         return Order.objects.prefetch_related('product_items').get(id=order_id)
     
-    def get_by_user(self, user_id: uuid.UUID) -> QuerySet[Order]:
-        return Order.objects.prefetch_related('product_items').filter(created_by_id=user_id)
-    
     def get_all(self) -> list[QuerySet[Order]]:
         return Order.objects.all()
+    
+    def filter(self, **params):
+        return Order.objects.prefetch_related('product_items').filter(**params)
     
     def create(self, order_data: dict) -> QuerySet[Order]:
         return Order.objects.create(**order_data)

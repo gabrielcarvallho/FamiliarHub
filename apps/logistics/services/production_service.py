@@ -35,7 +35,7 @@ class ProductionScheduleService(metaclass=ServiceBase):
 
         production_map = {}
         for item in schedules:
-            production_map.setdefault(item.product_id, {})[item.production_date] = item.amount
+            production_map.setdefault(item.product_id, {})[item.production_date] = item.batches
 
         allocations = []
 

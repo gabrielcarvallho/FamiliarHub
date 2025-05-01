@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from apps.orders.utils.order_permissions import OrderPermission
 from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 
 from apps.orders.services import OrderService
@@ -41,13 +42,14 @@ class OrderViews(APIView):
             order = self.__service.get_order(order_id)
 
             if not IsOwnerOrReadOnly().has_object_permission(request, self, order):
-                return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+                if not OrderPermission().has_object_permission(request, self, order):
+                    return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
 
             response = OrderResponseSerializer(order)
             return Response({'order': response.data}, status=status.HTTP_200_OK)
         
         return Response({'detail': "Customer ID is required."}, status=status.HTTP_400_BAD_REQUEST)
-
+                
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
 

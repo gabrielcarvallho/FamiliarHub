@@ -18,7 +18,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id': representation.get('id'),
             'name': representation.get('name'),
             'price': representation.get('price'),
-            'weight': f"{representation.get('weight')}g",
+            'weight': representation.get('weight'),
             'batch_packages': representation.get('batch_packages'),
             'daily_batch_capacity': representation.get('daily_batch_capacity'),
             'batch_production_days': representation.get('batch_production_days'),

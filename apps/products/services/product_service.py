@@ -15,11 +15,7 @@ class ProductService(metaclass=ServiceBase):
         return self.__repository.get_by_id(product_id)
     
     def get_all_products(self):
-        products = self.__repository.get_all()
-        if not products:
-            raise NotFound('No products found.')
-        
-        return products
+        return self.__repository.get_all()
     
     def create_product(self, **data):
         return self.__repository.create(data)

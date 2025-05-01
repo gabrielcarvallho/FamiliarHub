@@ -34,20 +34,10 @@ class CustomerService(metaclass=ServiceBase):
         return self.__repository.filter_by_address(customer_id)
     
     def get_customers_by_user(self, user):
-        customers = self.__repository.get_by_user(user.id)
-
-        if not customers:
-            raise NotFound('No customers found.')
-        
-        return customers
+        return self.__repository.get_by_user(user.id)
 
     def get_all_customers(self):
-        customers = self.__repository.get_all()
-
-        if not customers:
-            raise NotFound('No customers found.')
-        
-        return customers
+        return self.__repository.get_all()
 
     @transaction.atomic
     def create_customer(self, request, **data):

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from apps.core.utils.pagination import CustomPagination
 from apps.orders.utils.order_permissions import OrderPermission
 from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 
@@ -27,16 +28,20 @@ class OrderViews(APIView):
         order_id = request.query_params.get('id', None)
 
         if 'list' in request.GET:
+            paginator = CustomPagination()
+
             if request.user.is_admin:
                 orders = self.__service.get_all_orders()
-                response = OrderResponseSerializer(orders, many=True)
+                page = paginator.paginate_queryset(orders, request)
 
-                return Response({'orders': response.data}, status=status.HTTP_200_OK)
+                response = OrderResponseSerializer(page, many=True)
+                return paginator.get_paginated_response(response.data, resource_name='orders')
             else:
                 orders = self.__service.get_orders_by_user(request.user)
-                response = OrderResponseSerializer(orders, many=True)
+                page = paginator.paginate_queryset(orders, request)
 
-                return Response({'orders': response.data}, status=status.HTTP_200_OK)
+                response = OrderResponseSerializer(page, many=True)
+                return paginator.get_paginated_response(response.data, resource_name='orders')
             
         if order_id:
             order = self.__service.get_order(order_id)

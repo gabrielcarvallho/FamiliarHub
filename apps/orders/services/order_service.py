@@ -99,3 +99,9 @@ class OrderService(metaclass=ServiceBase):
         
         self.__product_order_repository.bulk_create(products)
         self.__production_repository.bulk_create(production_schedule)
+    
+    def delete_order(self, order_id):
+        if not self.__repository.exists_by_id(order_id):
+            raise NotFound('Order not found.')
+
+        self.__repository.delete(order_id)

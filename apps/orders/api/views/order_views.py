@@ -63,3 +63,12 @@ class OrderViews(APIView):
             return Response({'order': 'ok'}, status=status.HTTP_200_OK)
         
         return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        order_id = request.query_params.get('id', None)
+
+        if order_id:
+            self.__service.delete_order(order_id)
+            return Response({'detail': 'Order deleted successfully.'}, status=status.HTTP_200_OK)
+        
+        return Response({'detail': 'Order ID is required.'}, status=status.HTTP_400_BAD_REQUEST)

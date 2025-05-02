@@ -100,6 +100,28 @@ class OrderService(metaclass=ServiceBase):
         self.__product_order_repository.bulk_create(products)
         self.__production_repository.bulk_create(production_schedule)
     
+    @transaction.atomic
+    def update_order(self, obj, **data):
+        customer_id = data.get('customer_id', None)
+        if customer_id:
+            if not self.__customer_repository.exists_by_id(customer_id):
+                raise NotFound('Customer not found.')
+        
+        status_id = data.get('order_status_id', None)
+        if status_id:
+            if not self.__status_repository.exists_by_id(status_id):
+                raise NotFound('Status not found.')
+        
+        payment_id = data.get('payment_method_id', None)
+        if payment_id:
+            if not self.__payment_repository.exists_by_id(payment_id):
+                raise NotFound('Payment method not found.')
+        
+        for attr, value in data.items():
+            setattr(obj, attr, value)
+        
+        self.__repository.save(obj)
+    
     def delete_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
             raise NotFound('Order not found.')

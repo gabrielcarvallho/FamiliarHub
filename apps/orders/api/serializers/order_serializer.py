@@ -24,19 +24,22 @@ class OrderRequestSerializer(serializers.Serializer):
     products = ProductOrderSerializer(many=True)
 
     def validate(self, attrs):
-        if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
-            raise serializers.ValidationError("'delivery_address_id' or 'delivery_address' must be provided.")
+        context = self.context.get('action')
+        
+        if context == 'create':
+            if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
+                raise serializers.ValidationError("'delivery_address_id' or 'delivery_address' must be provided.")
+            
+            if 'products' not in attrs or not attrs['products']:
+                raise serializers.ValidationError("Order must have at least one product.")
         
         if 'delivery_address_id' in attrs and 'delivery_address' in attrs:
             raise serializers.ValidationError("Provide 'delivery_address_id' or 'delivery_address', not both.")
         
-        if 'products' not in attrs or not attrs['products']:
-            raise serializers.ValidationError("Order must have at least one product.")
-        
         today = timezone.now().date()
-        delivery_date = attrs.get('delivery_date')
+        delivery_date = attrs.get('delivery_date', None)
 
-        if delivery_date < today:
+        if delivery_date and delivery_date < today:
             raise serializers.ValidationError("Invalid delivery date.")
         
         return attrs

@@ -2,6 +2,7 @@ from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
+from apps.orders.services import ProductOrderService
 from apps.logistics.services import ProductionScheduleService
 
 from apps.orders.repositories import ProductOrderRepository
@@ -15,14 +16,15 @@ class OrderService(metaclass=ServiceBase):
     def __init__(
             self, 
             repository=OrderRepository(),
-            status_repository = StatusRepository(),
-            payment_repository = PaymentRepository(),
+            status_repository=StatusRepository(),
+            payment_repository=PaymentRepository(),
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
-            product_order_repository = ProductOrderRepository(),
+            product_order_repository=ProductOrderRepository(),
             production_repository=ProductionScheduleRepository(),
 
-            production_service = ProductionScheduleService()
+            product_order_service=ProductOrderService(),
+            production_service=ProductionScheduleService()
         ):
 
         self.__repository = repository
@@ -34,6 +36,7 @@ class OrderService(metaclass=ServiceBase):
         self.__product_order_repository = product_order_repository
 
         self.__production_service = production_service
+        self.__product_order_service = product_order_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
@@ -99,6 +102,41 @@ class OrderService(metaclass=ServiceBase):
         
         self.__product_order_repository.bulk_create(products)
         self.__production_repository.bulk_create(production_schedule)
+    
+    @transaction.atomic
+    def update_order(self, obj, **data):
+        if 'customer_id' in data:
+            customer_id = data.get('customer_id', None)
+            if customer_id:
+                if not self.__customer_repository.exists_by_id(customer_id):
+                    raise NotFound('Customer not found.')
+        
+        if 'order_status_id' in data:
+            status_id = data.get('order_status_id', None)
+            if status_id:
+                if not self.__status_repository.exists_by_id(status_id):
+                    raise NotFound('Status not found.')
+        
+        if 'payment_method_id' in data:
+            payment_id = data.get('payment_method_id', None)
+            if payment_id:
+                if not self.__payment_repository.exists_by_id(payment_id):
+                    raise NotFound('Payment method not found.')
+        
+        if 'delivery_address_id' in data:
+            delivery_address_id = data.get('delivery_address_id', None)
+            if delivery_address_id:
+                if not self.__address_repository.exists_by_id(delivery_address_id):
+                    raise NotFound('Delivery address not found.')
+                
+                address = self.__address_repository.get_by_id(delivery_address_id)
+                if address.customer.id != customer_id:
+                    raise ValidationError('Delivery address provided does not belong to the customer.')
+        
+        for attr, value in data.items():
+            setattr(obj, attr, value)
+
+        self.__repository.save(obj)
     
     def delete_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):

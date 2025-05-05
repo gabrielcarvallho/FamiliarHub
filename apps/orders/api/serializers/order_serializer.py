@@ -1,5 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 
 from apps.orders.models import Order
 from apps.orders.utils.fields import DateField
@@ -24,20 +25,26 @@ class OrderRequestSerializer(serializers.Serializer):
     products = ProductOrderSerializer(many=True)
 
     def validate(self, attrs):
-        if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
-            raise serializers.ValidationError("'delivery_address_id' or 'delivery_address' must be provided.")
+        context = self.context.get('action')
         
-        if 'delivery_address_id' in attrs and 'delivery_address' in attrs:
-            raise serializers.ValidationError("Provide 'delivery_address_id' or 'delivery_address', not both.")
+        if context == 'create':
+            if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
+                raise APIException("'delivery_address_id' or 'delivery_address' must be provided.")
+            
+            if 'products' not in attrs or not attrs['products']:
+                raise APIException("Order must have at least one product.")
         
-        if 'products' not in attrs or not attrs['products']:
-            raise serializers.ValidationError("Order must have at least one product.")
+            if 'delivery_address_id' in attrs and 'delivery_address' in attrs:
+                raise APIException("Provide 'delivery_address_id' or 'delivery_address', not both.")
+        else:
+            if 'delivery_address' in attrs:
+                raise APIException("Provide only 'delivery_address_id' for update order.")
         
         today = timezone.now().date()
-        delivery_date = attrs.get('delivery_date')
+        delivery_date = attrs.get('delivery_date', None)
 
-        if delivery_date < today:
-            raise serializers.ValidationError("Invalid delivery date.")
+        if delivery_date and delivery_date < today:
+            raise APIException("Invalid delivery date.")
         
         return attrs
 

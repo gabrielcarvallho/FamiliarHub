@@ -46,7 +46,7 @@ class ProductionScheduleService(metaclass=ServiceBase):
             product = products.get(id=product_id)
 
             batches_required = math.ceil(total_packages / product.batch_packages)
-            daily_capacity = math.floor(product.daily_batch_capacity * 0.8)
+            daily_capacity = math.floor(product.daily_batch_capacity * 0.7)
 
             current_date = start_date
             allocated_batches = 0

@@ -1,8 +1,12 @@
+import uuid
 from django.db.models import QuerySet
 from apps.orders.models import ProductOrder
 
 
 class ProductOrderRepository:
+    def filter_by_order(self, order_id: uuid.UUID) -> QuerySet[ProductOrder]:
+        return ProductOrder.objects.filter(order_id=order_id).order_by('product')
+
     def bulk_create(self, product_order_data: list) -> None:
         model_instances = [ProductOrder(
             order_id=item['order_id'],

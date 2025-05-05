@@ -7,7 +7,7 @@ from apps.core.utils.pagination import CustomPagination
 from apps.orders.utils.order_permissions import OrderPermission
 from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 
-from apps.orders.services import OrderService
+from apps.orders.services.order_service import OrderService
 from apps.orders.api.serializers.order_serializer import (
     OrderRequestSerializer, 
     OrderResponseSerializer)
@@ -56,7 +56,7 @@ class OrderViews(APIView):
         return Response({'detail': "Customer ID is required."}, status=status.HTTP_400_BAD_REQUEST)
                 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'action': 'create'})
 
         if serializer.is_valid():
             self.__service.create_order(request, **serializer.validated_data)
@@ -64,6 +64,24 @@ class OrderViews(APIView):
         
         return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
+    def patch(self, request):
+        order_id = request.data.pop('id')
+
+        if order_id:
+            order = self.__service.get_order(order_id)
+
+            if not IsOwnerOrReadOnly().has_object_permission(request, self, order):
+                return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
+            
+            serializer = self.serializer_class(instance=order, data=request.data, partial=True, context={'action': 'update'})
+            if serializer.is_valid():
+                self.__service.update_order(order, **serializer.validated_data)
+                return Response({'order': 'ok'}, status=status.HTTP_200_OK)
+            
+            return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response({'detail': 'Order ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request):
         order_id = request.query_params.get('id', None)
 

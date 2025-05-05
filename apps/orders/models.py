@@ -31,6 +31,16 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.SequenceConstraint(
+                name='order_identifier_seq',
+                fields=['identifier'],
+                start=1,
+                increment=1,
+            )
+        ]
+
     @property
     def total_price(self):
         return sum(item.total_price for item in self.product_items.all())

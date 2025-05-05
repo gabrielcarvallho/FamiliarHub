@@ -2,7 +2,6 @@ from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
-from apps.orders.services import ProductOrderService
 from apps.logistics.services import ProductionScheduleService
 
 from apps.orders.repositories import ProductOrderRepository
@@ -23,7 +22,6 @@ class OrderService(metaclass=ServiceBase):
             product_order_repository=ProductOrderRepository(),
             production_repository=ProductionScheduleRepository(),
 
-            product_order_service=ProductOrderService(),
             production_service=ProductionScheduleService()
         ):
 
@@ -36,7 +34,6 @@ class OrderService(metaclass=ServiceBase):
         self.__product_order_repository = product_order_repository
 
         self.__production_service = production_service
-        self.__product_order_service = product_order_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):

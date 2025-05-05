@@ -37,6 +37,7 @@ class Address(models.Model):
     city = models.CharField(max_length=70)
     state = models.CharField(max_length=2)
     observation = models.CharField(max_length=100, null=True, blank=True)
+    description = models.CharField(max_length=70, null=True, blank=True)
     is_billing_address = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)

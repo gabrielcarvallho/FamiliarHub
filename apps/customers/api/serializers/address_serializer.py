@@ -24,6 +24,7 @@ class AddressSerializer(serializers.ModelSerializer):
             'city': representation.get('city'),
             'state': representation.get('state'),
             'observation': representation.get('observation'),
+            'description': representation.get('description'),
             'is_billing_address': representation.get('is_billing_address')
         }
 

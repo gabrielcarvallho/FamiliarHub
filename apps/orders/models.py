@@ -48,6 +48,11 @@ class ProductOrder(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     quantity = models.PositiveIntegerField()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['order', 'product'], name='unique_product_per_order')
+        ]
+
     @property
     def total_price(self):
         return self.quantity * self.product.price

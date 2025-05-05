@@ -7,7 +7,7 @@ from apps.core.utils.pagination import CustomPagination
 from apps.orders.utils.order_permissions import OrderPermission
 from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 
-from apps.orders.services import OrderService
+from apps.orders.services.order_service import OrderService
 from apps.orders.api.serializers.order_serializer import (
     OrderRequestSerializer, 
     OrderResponseSerializer)

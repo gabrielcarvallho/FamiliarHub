@@ -21,6 +21,7 @@ class Status(models.Model):
 
 class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order_number = models.IntegerField(unique=True, editable=False)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
     payment_method = models.ForeignKey(Payment, on_delete=models.PROTECT)
@@ -30,16 +31,6 @@ class Order(models.Model):
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_orders')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            models.SequenceConstraint(
-                name='order_identifier_seq',
-                fields=['identifier'],
-                start=1,
-                increment=1,
-            )
-        ]
 
     @property
     def total_price(self):
@@ -51,6 +42,13 @@ class Order(models.Model):
         due_days = additional_info.get('due_days', 0)
         
         return self.delivery_date + timedelta(days=due_days)
+    
+    def save(self, *args, **kwargs):
+        if self.order_number is None:
+            last_order = Order.objects.order_by('-order_number').first()
+            self.order_number = 1 if not last_order else last_order.order_number + 1
+
+        super().save(*args, **kwargs)
 
 class ProductOrder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

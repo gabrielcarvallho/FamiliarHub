@@ -64,7 +64,7 @@ class OrderResponseSerializer(serializers.ModelSerializer):
 
         ordered_data = {
             'id': representation.get('id'),
-            'identifier': representation.get('identifier'),
+            'order_number': representation.get('order_number'),
             'customer': representation.get('customer'),
             'products': representation.get('products'),
             'total_price': f"{instance.total_price:.2f}",

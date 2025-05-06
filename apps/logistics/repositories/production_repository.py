@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from django.db.models import Sum
 from django.db.models import QuerySet
 
 from apps.logistics.models import ProductionSchedule
@@ -11,6 +12,16 @@ class ProductionScheduleRepository:
             product_id__in=product_ids,
             production_date__gte = reference_date
         ).order_by('production_date')
+    
+    def get_batches_by_date(self, date: date) -> QuerySet[ProductionSchedule]:
+        return ProductionSchedule.objects.filter(
+            production_date=date
+        ).values('product__id', 'product__name').annotate(total_batches=Sum('batches'))
+    
+    def get_orders_by_date(self, date: date) -> QuerySet[ProductionSchedule]:
+        return ProductionSchedule.objects.filter(
+            production_date=date
+        ).values_list('order_id', flat=True)
     
     def bulk_create(self, production_data: list) -> None:
         model_instances = [ProductionSchedule(

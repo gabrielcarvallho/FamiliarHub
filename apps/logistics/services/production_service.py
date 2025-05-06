@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 
 from apps.core.services import ServiceBase
 from apps.products.repositories import ProductRepository
+from apps.orders.repositories import ProductOrderRepository
 from apps.logistics.repositories import ProductionScheduleRepository
 
 
@@ -12,10 +13,13 @@ class ProductionScheduleService(metaclass=ServiceBase):
     def __init__(
             self, 
             repository=ProductionScheduleRepository(),
-            product_repository=ProductRepository()
+            product_repository=ProductRepository(),
+            product_order_repository=ProductOrderRepository()
         ):
+
         self.__repository = repository
         self.__product_repository = product_repository
+        self.__product_order_repository = product_order_repository
     
     def validate_production(self, products_data, delivery_date):
         start_date = timezone.now().date() + timedelta(days=1)
@@ -97,3 +101,33 @@ class ProductionScheduleService(metaclass=ServiceBase):
                 raise ValidationError(f"Unable to allocate production for product {product.name} by delivery date.")
 
         return allocations
+    
+    def get_production(self):
+        tomorrow = timezone.now() + timedelta(days=1)
+
+        batches = self.__repository.get_batches_by_date(tomorrow)
+        order_ids = self.__repository.get_orders_by_date(tomorrow)
+        amount_packages = self.__product_order_repository.filter_by_orders(order_ids) if order_ids else []
+
+        summary = {}
+
+        for item in amount_packages:
+            pid = item['product__id']
+            summary[pid] = {
+                'product_name': item['product__name'],
+                'total_packages': item['total_packages'],
+                'total_batches': 0
+            }
+
+        for item in batches:
+            pid = item['product__id']
+            if pid in summary:
+                summary[pid]['total_batches'] = item['total_batches']
+            else:
+                summary[pid] = {
+                    'product_name': item['product__name'],
+                    'total_packages': 0,
+                    'total_batches': item['total_batches']
+                }
+        
+        return summary

@@ -33,6 +33,9 @@ class CustomerRepository:
             )
         ).all().order_by('company_name')
     
+    def filter(self, **params):
+        return Customer.objects.filter(**params)
+
     def filter_by_address(self, customer_id: uuid.UUID) -> QuerySet[Customer]:
         return Customer.objects.prefetch_related(
             'contact',

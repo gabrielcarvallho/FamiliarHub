@@ -44,7 +44,8 @@ class OrderService(metaclass=ServiceBase):
     def get_orders_by_user(self, user):
         if not user.groups.filter(name='delivery_person'):
             return self.__repository.filter(
-                created_by_id=user.id
+                created_by_id=user.id,
+                order_status__identifier=0
             )
         else:
             return self.__repository.filter(

@@ -131,6 +131,10 @@ class OrderService(metaclass=ServiceBase):
                 if address.customer.id != customer_id:
                     raise ValidationError('Delivery address provided does not belong to the customer.')
         
+        if 'is_delivered' in data:
+            if obj.order_status.identifier != 2:
+                raise ValidationError('Cannot mark an order as delivered.')
+        
         for attr, value in data.items():
             setattr(obj, attr, value)
 

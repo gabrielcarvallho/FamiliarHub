@@ -27,6 +27,7 @@ class Order(models.Model):
     payment_method = models.ForeignKey(Payment, on_delete=models.PROTECT)
     delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     delivery_date = models.DateField()
+    is_delivered = models.BooleanField(default=False)
 
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_orders')
     created_at = models.DateTimeField(auto_now_add=True)

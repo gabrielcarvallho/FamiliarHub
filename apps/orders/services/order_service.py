@@ -1,5 +1,5 @@
 from django.db import transaction
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 
 from apps.core.services import ServiceBase
 from apps.logistics.services import ProductionScheduleService
@@ -139,6 +139,18 @@ class OrderService(metaclass=ServiceBase):
             setattr(obj, attr, value)
 
         self.__repository.save(obj)
+    
+    def finish_work(self, user):
+        if not user.groups.filter(name='sales_person'):
+            raise PermissionDenied('You do not have permission to access this resource.')
+        
+        orders = self.__repository.filter(
+            created_by_id=user.id,
+            order_status__identifier=0
+        )
+        new_status = self.__status_repository.get_by_identifier(identifier=1)
+
+        self.__repository.update(orders, order_status=new_status.id)
     
     def delete_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):

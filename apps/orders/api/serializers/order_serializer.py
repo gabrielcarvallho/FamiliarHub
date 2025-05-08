@@ -83,3 +83,8 @@ class OrderResponseSerializer(serializers.ModelSerializer):
         }
 
         return ordered_data
+
+class WorkSerializer(serializers.Serializer):
+    order_ids = serializers.ListField(
+        child=serializers.UUIDField(format='hex_verbose', write_only=True)
+    )

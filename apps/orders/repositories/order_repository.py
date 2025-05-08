@@ -22,6 +22,9 @@ class OrderRepository:
     
     def delete(self, order_id: uuid.UUID) -> None:
         Order.objects.filter(id=order_id).delete()
+    
+    def update(self, obj: QuerySet[Order], **params) -> None:
+        obj.update(**params)
 
     def save(self, obj: Order) -> None:
         obj.save()

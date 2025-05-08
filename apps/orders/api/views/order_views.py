@@ -1,3 +1,4 @@
+from typing import Any
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,7 +10,8 @@ from apps.core.utils.permissions import UserPermission, IsOwnerOrReadOnly
 from apps.orders.services.order_service import OrderService
 from apps.orders.api.serializers.order_serializer import (
     OrderRequestSerializer, 
-    OrderResponseSerializer)
+    OrderResponseSerializer,
+    WorkSerializer)
 
 
 class OrderViews(APIView):
@@ -89,3 +91,15 @@ class OrderViews(APIView):
             return Response({'detail': 'Order deleted successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': 'Order ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+class WorkView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = WorkSerializer
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.__service = OrderService()
+    
+    def patch(self, request):
+        self.__service.finish_work(request.user)
+        return Response({'detail': 'ok'}, status=status.HTTP_200_OK)

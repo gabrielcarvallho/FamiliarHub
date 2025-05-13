@@ -1,6 +1,6 @@
-from .core_views import get_cep
+from .external_views import get_cep
 
 
 __all__ = [
-    'get_cep'
+    "get_cep"
 ]

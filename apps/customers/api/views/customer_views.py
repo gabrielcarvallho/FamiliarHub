@@ -27,24 +27,15 @@ class CustomerView(APIView):
         if 'list' in request.GET:
             paginator = CustomPagination()
 
-            if request.user.is_admin:
-                customers = self.__service.get_all_customers()
-                page = paginator.paginate_queryset(customers, request)
+            customers = self.__service.get_all_customers()
+            page = paginator.paginate_queryset(customers, request)
 
-                response = self.serializer_class(page, many=True)
-                return paginator.get_paginated_response(response.data, resource_name='customers')
-            else:
-                customers = self.__service.get_customers_by_user(request.user)
-                response = self.serializer_class(customers, many=True)
-
-                return Response({'customers': response.data}, status=status.HTTP_200_OK)
+            response = self.serializer_class(page, many=True)
+            return paginator.get_paginated_response(response.data, resource_name='customers')
         
         if customer_id:
             customer = self.__service.get_customer(customer_id)
 
-            if not IsOwnerOrReadOnly().has_object_permission(request, self, customer):
-                return Response({"detail": "You do not have permission to perform this action."}, status=status.HTTP_403_FORBIDDEN)
-            
             response = self.serializer_class(customer)
             return Response({'customer': response.data}, status=status.HTTP_200_OK)
         

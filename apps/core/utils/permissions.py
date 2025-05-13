@@ -27,4 +27,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.user.is_admin:
             return True
         
+        if request.method == 'PATCH':
+            return request.user.groups.filter(name='delivery_person').exists()
+        
         return obj.created_by_id == request.user.id

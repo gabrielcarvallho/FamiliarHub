@@ -32,9 +32,6 @@ class CustomerService(metaclass=ServiceBase):
             raise NotFound('Customer not found.')
         
         return self.__repository.filter_by_address(customer_id)
-    
-    def get_customers_by_user(self, user):
-        return self.__repository.get_by_user(user.id)
 
     def get_all_customers(self):
         return self.__repository.get_all()

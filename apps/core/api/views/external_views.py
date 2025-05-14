@@ -17,3 +17,15 @@ def get_cep(request):
         return Response(response)
     
     return Response({'detail': 'CEP is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_cnpj(request):
+    service = ExternalService()
+
+    cnpj = request.query_params.get('cnpj', None)
+    if cnpj:
+        response = service.request_cnpj_api(cnpj)
+        return Response(response)
+    
+    return Response({'detail': 'CNPJ is required'}, status=status.HTTP_400_BAD_REQUEST)

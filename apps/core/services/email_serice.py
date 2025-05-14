@@ -1,7 +1,7 @@
 from django.conf import settings
 
-from .base_service import ServiceBase
 from apps.core.tasks import send_email
+from apps.core.services.base_service import ServiceBase
 
 
 class EmailService(metaclass=ServiceBase):

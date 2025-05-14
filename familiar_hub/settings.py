@@ -157,3 +157,8 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL') == 'True'
 
 FRONTEND_URL = os.getenv('FRONTEND_URL')
+
+CEP_API_URL = os.getenv('CEP_API_URL')
+CNPJ_API_URL = os.getenv('CNPJ_API_URL')
+
+CNPJ_API_KEY = os.getenv('CNPJ_API_KEY')

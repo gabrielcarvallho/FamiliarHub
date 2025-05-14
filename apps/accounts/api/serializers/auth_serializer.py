@@ -9,6 +9,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token['email'] = user.email
+
         return token
     
     def validate(self, attrs):
@@ -19,4 +20,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         if user is None:
             raise serializers.ValidationError('Invalid credentials.')
         
-        return super().validate(attrs) 
+        data = super().validate(attrs)
+
+        data['user'] = {
+            'id': user.id,
+            'email': user.email,
+            'is_admin': user.is_admin,
+            'group_id': user.groups.first().id if user.groups.exists() else None
+        }
+
+        return data

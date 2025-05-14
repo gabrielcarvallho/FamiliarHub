@@ -17,37 +17,35 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except Exception:
-            return Response({'detail': 'Invalid credentials.'}, status=status.HTTP_400_BAD_REQUEST)
+        if serializer.is_valid():
+            refresh = serializer.validated_data['refresh']
+            access = serializer.validated_data['access']
+            user = serializer.validated_data['user']
 
-        refresh = serializer.validated_data['refresh']
-        access = serializer.validated_data['access']
+            response = Response({
+                'user': user
+            }, status=status.HTTP_200_OK)
 
-        response = Response({
-            'refresh': refresh,
-            'access': access,
-        }, status=status.HTTP_200_OK)
+            response.set_cookie(
+                key='access_token',
+                value=access,
+                httponly=True,
+                secure=True,
+                samesite='None',
+            )
 
-        response.set_cookie(
-            key='access_token',
-            value=access,
-            httponly=True,
-            secure=True,
-            samesite='None',
-        )
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh,
+                httponly=True,
+                secure=True,
+                samesite='None',
+                max_age=60 * 60 * 24 * 90,
+            )
 
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh,
-            httponly=True,
-            secure=True,
-            samesite='None',
-            max_age=60 * 60 * 24 * 90,
-        )
+            return response
 
-        return response
+        return Response({'detail': 'Invalid credentials.'}, status=status.HTTP_400_BAD_REQUEST)
     
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):

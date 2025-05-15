@@ -76,6 +76,7 @@ class OrderResponseSerializer(serializers.ModelSerializer):
             'payment_method': representation.get('payment_method'),
             'delivery_address': representation.get('delivery_address'),
             'delivery_date': representation.get('delivery_date'),
+            'is_delivered': representation.get('is_delivered'),
             'due_date': instance.payment_due_date,
             'order_status': representation.get('order_status'),
             'created_at': representation.get('created_at'),

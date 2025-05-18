@@ -17,6 +17,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  redis:
+    image: redis:alpine
+    container_name: redis_familiar_hub
+    ports:
+      - "6379:6379"
+    networks:
+      - familiar_hub_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   web:
     build: .
     container_name: familiar_web
@@ -27,6 +39,19 @@ services:
     ports:
       - "8000:8000"
     depends_on:
+      - db
+      - redis
+    networks:
+      - familiar_hub_network
+  celery_worker:
+    build: .
+    container_name: familiar_celery_worker
+    command: celery -A familiar_hub worker -l INFO
+    volumes:
+      - .:/code
+    depends_on:
+      - web
+      - redis
       - db
     networks:
       - familiar_hub_network

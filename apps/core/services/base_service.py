@@ -22,8 +22,8 @@ def ServiceBaseDecorator(func):
         except ValueError as e:
             raise APIException(str(e))
         except DatabaseError as e:
-            raise APIException(f'Erro no banco de dados. {str(e)}') from e
+            raise APIException(f'Database error. {str(e)}') from e
         except Exception as e:
-            raise APIException(f'Erro inesperado. {str(e)}') from e
+            raise APIException(f'Unexpected error. {str(e)}') from e
         
     return wrapper

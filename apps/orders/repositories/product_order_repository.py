@@ -1,10 +1,23 @@
 import uuid
+from datetime import date
 from django.db.models import Sum
 from django.db.models import QuerySet
 from apps.orders.models import ProductOrder
 
 
 class ProductOrderRepository:
+    def get_orders_by_product_and_date(self, product_ids, start_date: date, end_date: date) -> QuerySet[ProductOrder]:
+        return (
+            ProductOrder.objects.filter(
+                product_id__in=product_ids,
+                order__delivery_date__gte=start_date,
+                order__delivery_date__lte=end_date
+            )
+            .values('product_id', 'order__delivery_date')
+            .annotate(total_packages=Sum('quantity'))
+            .order_by('product_id', 'order__delivery_date')
+        )
+    
     def filter_by_orders(self, order_ids: uuid.UUID) -> QuerySet[ProductOrder]:
         return ProductOrder.objects.filter(
             order_id__in=order_ids

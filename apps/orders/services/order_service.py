@@ -90,6 +90,7 @@ class OrderService(metaclass=ServiceBase):
         data['created_by_id'] = request.user.id
 
         production_schedule = self.__production_service.validate_production(products, delivery_date)
+        print(production_schedule)
 
         order = self.__repository.create(data)
         for product in products:
@@ -99,7 +100,7 @@ class OrderService(metaclass=ServiceBase):
             production['order_id'] = order.id
         
         self.__product_order_repository.bulk_create(products)
-        self.__production_repository.bulk_create(production_schedule)
+        self.__production_repository.create_or_update(production_schedule)
     
     @transaction.atomic
     def update_order(self, obj, **data):

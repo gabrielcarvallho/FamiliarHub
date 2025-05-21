@@ -1,6 +1,5 @@
 import uuid
 from datetime import date
-from django.db.models import Sum
 from django.db.models import QuerySet
 
 from apps.logistics.models import ProductionSchedule
@@ -13,22 +12,20 @@ class ProductionScheduleRepository:
             production_date__gte = reference_date
         ).order_by('production_date')
     
-    def get_batches_by_date(self, date: date) -> QuerySet[ProductionSchedule]:
-        return ProductionSchedule.objects.filter(
-            production_date=date
-        ).values('product__id', 'product__name').annotate(total_batches=Sum('batches'))
+    def filter_by_date(self, date: date) -> QuerySet[ProductionSchedule]:
+        return ProductionSchedule.objects.filter(production_date=date).select_related('product')
     
-    def get_orders_by_date(self, date: date) -> QuerySet[ProductionSchedule]:
-        return ProductionSchedule.objects.filter(
-            production_date=date
-        ).values_list('order_id', flat=True)
-    
-    def bulk_create(self, production_data: list) -> None:
-        model_instances = [ProductionSchedule(
-            order_id=item['order_id'],
-            product_id=item['product_id'],
-            production_date=item['production_date'],
-            batches=item['batches']
-        ) for item in production_data]
-
-        ProductionSchedule.objects.bulk_create(objs=model_instances)
+    def create_or_update(self, production_schedule: list) -> None:
+        for alloc in production_schedule:
+            obj, created = ProductionSchedule.objects.get_or_create(
+                product_id=alloc['product_id'],
+                production_date=alloc['production_date'],
+                defaults={
+                    'batches': alloc['batches'],
+                    'packages': alloc['packages'],
+                }
+            )
+            if not created and (obj.batches != alloc['batches'] or obj.packages != alloc['packages']):
+                obj.batches = alloc['batches']
+                obj.packages = alloc['packages']
+                obj.save()

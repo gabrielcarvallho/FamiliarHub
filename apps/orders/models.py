@@ -1,7 +1,7 @@
 import uuid
 from datetime import timedelta
 
-from django.db import models
+from django.db import models, transaction
 
 from apps.products.models import Product
 from apps.accounts.models import CustomUser
@@ -46,8 +46,9 @@ class Order(models.Model):
     
     def save(self, *args, **kwargs):
         if self.order_number is None:
-            last_order = Order.objects.order_by('-order_number').first()
-            self.order_number = 1 if not last_order else last_order.order_number + 1
+            with transaction.atomic():
+                last_order = Order.objects.order_by('-order_number').first()
+                self.order_number = 1 if not last_order else last_order.order_number + 1
 
         super().save(*args, **kwargs)
 

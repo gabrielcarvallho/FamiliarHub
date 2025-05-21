@@ -55,7 +55,7 @@ class Order(models.Model):
 class ProductOrder(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='product_items')
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
 
     class Meta:

@@ -11,4 +11,4 @@ class StatusRepository:
         return Status.objects.get(identifier=identifier)
     
     def get_all(self) -> QuerySet[Status]:
-        return Status.objects.all()
+        return Status.objects.all().order_by('identifier')

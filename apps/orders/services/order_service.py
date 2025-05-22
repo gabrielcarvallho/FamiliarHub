@@ -142,7 +142,7 @@ class OrderService(metaclass=ServiceBase):
         self.__repository.save(obj)
     
     def finish_work(self, user):
-        if not user.groups.filter(name='sales_person'):
+        if not user.groups.filter(name='sales_person') and not user.is_admin:
             raise PermissionDenied('You do not have permission to access this resource.')
         
         orders = self.__repository.filter(

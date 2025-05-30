@@ -9,12 +9,12 @@ from django.core.mail import send_mail
     retry_kwargs={'max_retries': 3, 'countdown': 60},
     retry_backoff=True
 )
-def send_email(self, subject, message, to):
+def send_email(self, subject, message, to, from_email=None):
     try:
         result = send_mail(
             subject,
             message,
-            settings.EMAIL_HOST_USER,
+            from_email or settings.DEFAULT_FROM_EMAIL,
             [to],
             fail_silently=False
         )

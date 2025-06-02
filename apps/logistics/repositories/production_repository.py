@@ -25,7 +25,7 @@ class ProductionScheduleRepository:
                     'packages': alloc['packages'],
                 }
             )
-            if not created and (obj.batches != alloc['batches'] or obj.packages != alloc['packages']):
-                obj.batches = alloc['batches']
-                obj.packages = alloc['packages']
+            if not created:
+                obj.batches += alloc['batches']
+                obj.packages += alloc['packages']
                 obj.save()

@@ -90,7 +90,6 @@ class OrderService(metaclass=ServiceBase):
         data['created_by_id'] = request.user.id
 
         production_schedule = self.__production_service.validate_production(products, delivery_date)
-        print(production_schedule)
 
         order = self.__repository.create(data)
         for product in products:

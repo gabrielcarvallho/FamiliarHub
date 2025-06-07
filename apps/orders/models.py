@@ -2,6 +2,7 @@ import uuid
 from datetime import timedelta
 
 from django.db import models, transaction
+from apps.orders.utils.date_utils import DateUtils
 
 from apps.products.models import Product
 from apps.accounts.models import CustomUser
@@ -25,6 +26,7 @@ class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     order_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
     payment_method = models.ForeignKey(Payment, on_delete=models.PROTECT)
+    payment_due_days = models.PositiveIntegerField(null=True, blank=True)
     delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     delivery_date = models.DateField()
     is_delivered = models.BooleanField(default=False)
@@ -39,16 +41,26 @@ class Order(models.Model):
     
     @property
     def payment_due_date(self):
-        additional_info = self.payment_method.additional_info or {}
-        due_days = additional_info.get('due_days', 0)
+        if not self.payment_method.is_requires_due_date:
+            return None
         
-        return self.delivery_date + timedelta(days=due_days)
+        due_days = self.payment_due_days
+        if not due_days:
+            additional_info = self.payment_method.additional_info or {}
+            due_days = additional_info.get('due_days', 0)
+        
+        due_date = self.delivery_date + timedelta(days=due_days)
+        return DateUtils.get_next_business_day(due_date)
     
     def save(self, *args, **kwargs):
         if self.order_number is None:
             with transaction.atomic():
                 last_order = Order.objects.order_by('-order_number').first()
                 self.order_number = 1 if not last_order else last_order.order_number + 1
+        
+        if self.payment_method.is_requires_due_date and not self.payment_due_days:
+            additional_info = self.payment_method.additional_info
+            self.payment_due_days = additional_info.get('due_days')
 
         super().save(*args, **kwargs)
 

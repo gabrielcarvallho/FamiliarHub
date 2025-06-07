@@ -9,7 +9,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOrder
-        fields = ['id', 'product_id', 'quantity']
+        fields = ['id', 'product_id', 'quantity', 'sale_price']
         read_only_fields = ['id']
     
     def validate(self, attrs):

@@ -27,7 +27,8 @@ class ProductOrderRepository:
         model_instances = [ProductOrder(
             order_id=item['order_id'],
             product_id=item['product_id'],
-            quantity=item['quantity']
+            quantity=item['quantity'],
+            sale_price=item['sale_price']
         ) for item in product_order_data]
         
         ProductOrder.objects.bulk_create(objs=model_instances)

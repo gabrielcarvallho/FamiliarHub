@@ -7,29 +7,20 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from apps.core.services import ServiceBase
-from apps.products.repositories import ProductRepository
 from apps.logistics.repositories import ProductionScheduleRepository
 
 
 class ProductionScheduleService(metaclass=ServiceBase):
     def __init__(
             self, 
-            repository=ProductionScheduleRepository(),
-            product_repository=ProductRepository()
+            repository=ProductionScheduleRepository()
         ):
 
         self.__repository = repository
-        self.__product_repository = product_repository
     
-    def validate_production(self, products_data, delivery_date):
+    def validate_production(self, products_data, products_obj, delivery_date):
         start_date = timezone.now().date() + timedelta(days=1)
-
         product_ids = list(set([uuid.UUID(str(item['product_id'])) for item in products_data]))
-        products = {p.id: p for p in self.__product_repository.filter_by_id(product_ids)}
-
-        missing_products = [str(pid) for pid in product_ids if pid not in products]
-        if missing_products:
-            raise ValidationError(f"Products not found: {', '.join(missing_products)}")
 
         production_map = defaultdict(lambda: defaultdict(int))
         schedules = self.__repository.filter(product_ids=product_ids, reference_date=start_date)
@@ -46,7 +37,7 @@ class ProductionScheduleService(metaclass=ServiceBase):
         workdays = list(self._iter_workdays(start_date, delivery_date))
         
         for product_id in product_ids:
-            product = products[product_id]
+            product = products_obj[product_id]
             
             total_packages = ordered_packages_map[product_id][delivery_date]
             batches_required = math.ceil(total_packages / product.batch_packages)

@@ -1,9 +1,11 @@
+import uuid
 from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 
 from apps.core.services import ServiceBase
 from apps.logistics.services import ProductionScheduleService
 
+from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
 from apps.logistics.repositories import ProductionScheduleRepository
 from apps.orders.repositories.order_repository import OrderRepository
@@ -19,6 +21,7 @@ class OrderService(metaclass=ServiceBase):
             payment_repository=PaymentRepository(),
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
+            product_repository=ProductRepository(),
             product_order_repository=ProductOrderRepository(),
             production_repository=ProductionScheduleRepository(),
 
@@ -30,6 +33,7 @@ class OrderService(metaclass=ServiceBase):
         self.__payment_repository = payment_repository
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
+        self.__product_repository = product_repository
         self.__production_repository = production_repository
         self.__product_order_repository = product_order_repository
 
@@ -63,7 +67,7 @@ class OrderService(metaclass=ServiceBase):
         delivery_address_id = data.get('delivery_address_id', None)
         new_delivery_address = data.pop('delivery_address', None)
         delivery_date = data['delivery_date']
-        products = data.pop('products')
+        products_data = data.pop('products')
 
         if not self.__customer_repository.exists_by_id(customer_id):
             raise NotFound('Customer not found.')
@@ -89,16 +93,23 @@ class OrderService(metaclass=ServiceBase):
         
         data['created_by_id'] = request.user.id
 
-        production_schedule = self.__production_service.validate_production(products, delivery_date)
+        product_ids = list(set([uuid.UUID(str(item['product_id'])) for item in products_data]))
+        products = {p.id: p for p in self.__product_repository.filter_by_id(product_ids)}
+
+        missing_products = [str(pid) for pid in product_ids if pid not in products]
+        if missing_products:
+            raise ValidationError(f"Products not found: {', '.join(missing_products)}")
+        
+        production_schedule = self.__production_service.validate_production(products_data, products, delivery_date)
 
         order = self.__repository.create(data)
-        for product in products:
+        for product in products_data:
             product['order_id'] = order.id
-        
-        for production in production_schedule:
-            production['order_id'] = order.id
-        
-        self.__product_order_repository.bulk_create(products)
+
+            if not product.get('sale_price'):
+                product['sale_price'] = products[product['product_id']].price
+
+        self.__product_order_repository.bulk_create(products_data)
         self.__production_repository.create_or_update(production_schedule)
     
     @transaction.atomic

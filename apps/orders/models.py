@@ -57,6 +57,7 @@ class ProductOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='product_items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
+    sale_price = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -65,4 +66,4 @@ class ProductOrder(models.Model):
 
     @property
     def total_price(self):
-        return self.quantity * self.product.price
+        return self.quantity * self.sale_price

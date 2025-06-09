@@ -25,6 +25,7 @@ class OrderRequestSerializer(serializers.Serializer):
     is_delivered = serializers.BooleanField(required=False)
 
     products = ProductOrderSerializer(many=True)
+    table_order = serializers.IntegerField(required=False)
 
     def validate(self, attrs):
         context = self.context.get('action')
@@ -79,6 +80,7 @@ class OrderResponseSerializer(serializers.ModelSerializer):
             'order_status': representation.get('order_status'),
             'created_at': representation.get('created_at'),
             'updated_at': representation.get('updated_at'),
+            'table_order': representation.get('table_order')
         }
 
         return ordered_data

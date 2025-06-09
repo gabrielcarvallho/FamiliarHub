@@ -35,6 +35,8 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    table_order = models.IntegerField(null=True, blank=True)
+
     @property
     def total_price(self):
         return sum(item.total_price for item in self.product_items.all())

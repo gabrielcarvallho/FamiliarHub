@@ -42,9 +42,6 @@ class OrderRequestSerializer(serializers.Serializer):
             is_delivered = attrs.get('is_delivered', None)
             if is_delivered:
                 raise APIException("Cannot mark an order as delivered during creation.")
-        else:
-            if 'delivery_address' in attrs:
-                raise APIException("Provide only 'delivery_address_id' for update order.")
         
         today = timezone.now().date()
         delivery_date = attrs.get('delivery_date', None)

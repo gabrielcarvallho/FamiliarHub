@@ -1,9 +1,12 @@
+import uuid
 from django.db import transaction
 from rest_framework.exceptions import NotFound, ValidationError, PermissionDenied
 
 from apps.core.services import ServiceBase
+from apps.orders.services import ProductOrderService
 from apps.logistics.services import ProductionScheduleService
 
+from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
 from apps.logistics.repositories import ProductionScheduleRepository
 from apps.orders.repositories.order_repository import OrderRepository
@@ -19,9 +22,11 @@ class OrderService(metaclass=ServiceBase):
             payment_repository=PaymentRepository(),
             customer_repository=CustomerRepository(),
             address_repository=AddressRepository(),
+            product_repository=ProductRepository(),
             product_order_repository=ProductOrderRepository(),
             production_repository=ProductionScheduleRepository(),
 
+            product_order_service=ProductOrderService(),
             production_service=ProductionScheduleService()
         ):
 
@@ -30,10 +35,12 @@ class OrderService(metaclass=ServiceBase):
         self.__payment_repository = payment_repository
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
+        self.__product_repository = product_repository
         self.__production_repository = production_repository
         self.__product_order_repository = product_order_repository
 
         self.__production_service = production_service
+        self.__product_order_service = product_order_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
@@ -63,7 +70,7 @@ class OrderService(metaclass=ServiceBase):
         delivery_address_id = data.get('delivery_address_id', None)
         new_delivery_address = data.pop('delivery_address', None)
         delivery_date = data['delivery_date']
-        products = data.pop('products')
+        products_data = data.pop('products')
 
         if not self.__customer_repository.exists_by_id(customer_id):
             raise NotFound('Customer not found.')
@@ -89,21 +96,33 @@ class OrderService(metaclass=ServiceBase):
         
         data['created_by_id'] = request.user.id
 
-        production_schedule = self.__production_service.validate_production(products, delivery_date)
-        print(production_schedule)
+        product_ids = list(set([uuid.UUID(str(item['product_id'])) for item in products_data]))
+        products = {p.id: p for p in self.__product_repository.filter_by_id(product_ids)}
 
+        if len(products) != len(set(product_ids)):
+            missing_ids = set(product_ids) - set(products.keys())
+            raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
+        
+        allocations = self.__production_service.validate_production(products, products_data, delivery_date)
         order = self.__repository.create(data)
-        for product in products:
+
+        for product in products_data:
             product['order_id'] = order.id
+
+            if not product.get('sale_price'):
+                product['sale_price'] = products[product['product_id']].price
         
-        for production in production_schedule:
-            production['order_id'] = order.id
-        
-        self.__product_order_repository.bulk_create(products)
-        self.__production_repository.create_or_update(production_schedule)
+        for allocation in allocations:
+            allocation['order_id'] = str(order.id)
+
+        self.__product_order_repository.bulk_create(products_data)
+        self.__production_repository.create_or_update(allocations)
     
     @transaction.atomic
     def update_order(self, obj, **data):
+        if obj.order_status.identifier not in [0, 1]:
+            raise ValidationError(f'Cannot update order with status: {obj.order_status.description}')
+        
         if 'customer_id' in data:
             customer_id = data.get('customer_id', None)
             if customer_id:
@@ -136,6 +155,29 @@ class OrderService(metaclass=ServiceBase):
             if obj.order_status.identifier != 2:
                 raise ValidationError('Cannot mark an order as delivered.')
         
+        products_data = data.get('products', None)
+        if products_data:
+            product_ids = list(set([uuid.UUID(str(item['product_id'])) for item in products_data]))
+            products = {p.id: p for p in self.__product_repository.filter_by_id(product_ids)}
+        
+            if len(products) != len(set(product_ids)):
+                missing_ids = set(product_ids) - set(products.keys())
+                raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
+            
+            delivery_date = data.get('delivery_date', obj.delivery_date)
+
+            self.__product_order_service.update_products(obj.id, products, products_data)
+            self.__production_service.update_production(obj, products, products_data, delivery_date)
+
+            if self.__production_service._reajust_production(obj, products_data):
+                subsequent_orders = self.__repository.filter(
+                    order_status__identifier__in=[0, 1],
+                    created_at__gte=obj.created_at
+                ).prefetch_related('product_items').order_by('created_at')
+
+                if subsequent_orders:
+                    self.__production_service.reajust_subsequent_orders(products, subsequent_orders)
+
         for attr, value in data.items():
             setattr(obj, attr, value)
 

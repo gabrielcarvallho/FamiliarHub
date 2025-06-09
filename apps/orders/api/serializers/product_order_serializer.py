@@ -9,16 +9,8 @@ class ProductOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductOrder
-        fields = ['id', 'product_id', 'quantity']
+        fields = ['id', 'product_id', 'quantity', 'sale_price']
         read_only_fields = ['id']
-    
-    def validate(self, attrs):
-        quantity = attrs.get('quantity')
-
-        if quantity <= 0:
-            raise serializers.ValidationError('Quantity cannot be less than or equal to zero')
-        
-        return attrs
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -27,6 +19,7 @@ class ProductOrderSerializer(serializers.ModelSerializer):
             'id': representation.get('id'),
             'product': ProductSerializer(instance.product).data,
             'quantity': representation.get('quantity'),
+            'sale_price': representation.get('sale_price'),
             'total_price': f"{instance.total_price:.2f}"
         }
 

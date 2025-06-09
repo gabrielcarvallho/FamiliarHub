@@ -17,6 +17,7 @@ class OrderRequestSerializer(serializers.Serializer):
     customer_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     order_status_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     payment_method_id = serializers.UUIDField(format='hex_verbose', write_only=True)
+    payment_due_days = serializers.IntegerField(required=False)
     delivery_date = DateField()
 
     delivery_address_id = serializers.UUIDField(required=False)

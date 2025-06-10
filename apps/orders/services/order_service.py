@@ -123,11 +123,10 @@ class OrderService(metaclass=ServiceBase):
         if obj.order_status.identifier not in [0, 1]:
             raise ValidationError(f'Cannot update order with status: {obj.order_status.description}')
         
-        if 'customer_id' in data:
-            customer_id = data.get('customer_id', None)
-            if customer_id:
-                if not self.__customer_repository.exists_by_id(customer_id):
-                    raise NotFound('Customer not found.')
+        customer_id = data.get('customer_id', None)
+        if customer_id:
+            if not self.__customer_repository.exists_by_id(customer_id):
+                raise NotFound('Customer not found.')
         
         if 'order_status_id' in data:
             status_id = data.get('order_status_id', None)
@@ -150,6 +149,13 @@ class OrderService(metaclass=ServiceBase):
                 address = self.__address_repository.get_by_id(delivery_address_id)
                 if address.customer.id != customer_id:
                     raise ValidationError('Delivery address provided does not belong to the customer.')
+        elif 'delivery_address' in data:
+            new_delivery_address = data.pop('delivery_address')
+
+            new_delivery_address['customer_id'] = data.get('customer_id') if customer_id else obj.customer.id
+            address = self.__address_repository.create(new_delivery_address)
+
+            data['delivery_address_id'] = address.id
         
         if 'is_delivered' in data:
             if obj.order_status.identifier != 2:

@@ -160,9 +160,6 @@ class OrderService(metaclass=ServiceBase):
         
         products_data = data.get('products', None)
         if products_data:
-            if obj.order_status.identifier not in [0, 1]:
-                raise ValidationError(f'Cannot update order with status: {obj.order_status.description}')
-
             product_ids = list(set([uuid.UUID(str(item['product_id'])) for item in products_data]))
             products = {p.id: p for p in self.__product_repository.filter_by_id(product_ids)}
         

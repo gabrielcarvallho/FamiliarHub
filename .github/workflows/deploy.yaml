@@ -25,5 +25,5 @@ jobs:
             export DJANGO_ENV=prod
             pip install -r requirements.txt
             python manage.py migrate
-            sudo systemctl restart ${{ secrets.DROPLET_SERVER }}
+            sudo /usr/bin/systemctl restart ${{ secrets.DROPLET_SERVER }}
           ENDSSH

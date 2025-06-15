@@ -5,25 +5,25 @@ on:
     branches: ['master']
 
 jobs:
-  runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.DROPLET_SSH_KEY }}
-    
-    - name: Deploy to Production
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} << 'ENDSSH'
-          source venv/bin/activate
-          cd FamiliarHub/
-          git pull origin master
-          export DJANGO_ENV=prod
-          pip install -r requirements.txt
-          python manage.py migrate
-          sudo systemctl restart ${{ secrets.DROPLET_SERVER }}
-        ENDSSH
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DROPLET_SSH_KEY }}
+      
+      - name: Deploy to Production
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_IP }} << 'ENDSSH'
+            source venv/bin/activate
+            cd FamiliarHub/
+            git pull origin master
+            export DJANGO_ENV=prod
+            pip install -r requirements.txt
+            python manage.py migrate
+            sudo systemctl restart ${{ secrets.DROPLET_SERVER }}
+          ENDSSH

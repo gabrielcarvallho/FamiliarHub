@@ -4,11 +4,9 @@ from rest_framework.exceptions import NotFound, ValidationError, PermissionDenie
 
 from apps.core.services import ServiceBase
 from apps.orders.services import ProductOrderService
-from apps.logistics.services import ProductionScheduleService
 
 from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
-from apps.logistics.repositories import ProductionScheduleRepository
 from apps.orders.repositories.order_repository import OrderRepository
 from apps.orders.repositories import StatusRepository, PaymentRepository
 from apps.customers.repositories import CustomerRepository, AddressRepository
@@ -24,10 +22,8 @@ class OrderService(metaclass=ServiceBase):
             address_repository=AddressRepository(),
             product_repository=ProductRepository(),
             product_order_repository=ProductOrderRepository(),
-            production_repository=ProductionScheduleRepository(),
 
-            product_order_service=ProductOrderService(),
-            production_service=ProductionScheduleService()
+            product_order_service=ProductOrderService()
         ):
 
         self.__repository = repository
@@ -36,10 +32,8 @@ class OrderService(metaclass=ServiceBase):
         self.__customer_repository = customer_repository
         self.__address_repository = address_repository
         self.__product_repository = product_repository
-        self.__production_repository = production_repository
         self.__product_order_repository = product_order_repository
 
-        self.__production_service = production_service
         self.__product_order_service = product_order_service
 
     def get_order(self, order_id):

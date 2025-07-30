@@ -17,18 +17,23 @@ class ProductService(metaclass=ServiceBase):
     def get_all_products(self):
         return self.__repository.get_all()
     
+    def get_active_products(self):
+        return self.__repository.get_active()
+    
+    def get_inactive_products(self):
+        return self.__repository.get_inactive()
+    
     def create_product(self, **data):
-        return self.__repository.create(data)
+        self.__repository.create(data)
     
     def update_product(self, obj, **data):
         for attr, value in data.items():
             setattr(obj, attr, value)
 
         self.__repository.save(obj)
-        return obj
     
     def delete_product(self, product_id):
         if not self.__repository.exists_by_id(product_id):
             raise NotFound("Product not found.")
         
-        self.__repository.delete(product_id)
+        self.__repository.soft_delete(product_id)

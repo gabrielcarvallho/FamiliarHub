@@ -38,24 +38,24 @@ class CustomerService(metaclass=ServiceBase):
 
     @transaction.atomic
     def create_customer(self, request, **data):
-        cnpj = data.get('cnpj')
-        contact_data = data.pop('contact')
+        document = data.get('document')
+        contact_data = data.pop('contact', None)
         address_data = data.pop('billing_address')
 
-        if self.__repository.exists_by_cnpj(cnpj):
-            raise ValidationError('This CNPJ is already in use.')
+        if self.__repository.exists_by_document(document):
+            raise ValidationError('This document is already in use.')
         
         data['created_by_id'] = request.user.id
         customer = self.__repository.create(data)
 
-        contact_data['customer_id'] = customer.id
         address_data['customer_id'] = customer.id
         address_data['is_billing_address'] = True
 
         self.__address_repository.create(address_data)
-        self.__contact_repository.create(contact_data)
-
-        return customer
+            
+        if contact_data:
+            contact_data['customer_id'] = customer.id
+            self.__contact_repository.create(contact_data)
     
     @transaction.atomic
     def update_customer(self, obj, **data):
@@ -65,11 +65,8 @@ class CustomerService(metaclass=ServiceBase):
         for attr, value in data.items():
             setattr(obj, attr, value)
         
-        if address_data:
-            for attr, value in address_data.items():
-                setattr(obj.billing_address[0], attr, value)
-            
-            self.__address_repository.save(obj.billing_address[0])
+        for attr, value in address_data.items():
+            setattr(obj.billing_address[0], attr, value)
 
         if contact_data:
             for attr, value in contact_data.items():
@@ -78,7 +75,7 @@ class CustomerService(metaclass=ServiceBase):
             self.__contact_repository.save(obj.contact)
 
         self.__repository.save(obj)
-        return obj
+        self.__address_repository.save(obj.billing_address[0])
     
     def delete_customer(self, customer_id):
         if not self.__repository.exists_by_id(customer_id):

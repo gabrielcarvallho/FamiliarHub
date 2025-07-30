@@ -7,6 +7,7 @@ from apps.orders.utils.date_utils import DateUtils
 from apps.products.models import Product
 from apps.accounts.models import CustomUser
 from apps.customers.models import Customer, Address
+from apps.orders.enums import StatusCategory, DeliveryMethod
 
 
 class Payment(models.Model):
@@ -18,17 +19,23 @@ class Payment(models.Model):
 class Status(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     description = models.CharField(max_length=120)
-    identifier = models.IntegerField()
+    category = models.IntegerField(choices=StatusCategory)
+    delivery_method = models.CharField(max_length=8, choices=DeliveryMethod, null=True, blank=True)
+    sequence_order = models.IntegerField()
 
 class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.IntegerField(unique=True, editable=False)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    order_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
+
     payment_method = models.ForeignKey(Payment, on_delete=models.PROTECT)
     payment_due_days = models.PositiveIntegerField(null=True, blank=True)
-    delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+
+    delivery_method = models.CharField(max_length=8, choices=DeliveryMethod)
+    delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
     delivery_date = models.DateField()
+
+    order_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
     is_delivered = models.BooleanField(default=False)
 
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_orders')

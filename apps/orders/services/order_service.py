@@ -61,9 +61,9 @@ class OrderService(metaclass=ServiceBase):
         customer_id = data.get('customer_id')
         status_id = data.get('order_status_id')
         payment_id = data.get('payment_method_id')
+        delivery_method = data.get('delivery_method')
         delivery_address_id = data.get('delivery_address_id', None)
         new_delivery_address = data.pop('delivery_address', None)
-        delivery_date = data['delivery_date']
         products_data = data.pop('products')
 
         if not self.__customer_repository.exists_by_id(customer_id):
@@ -75,18 +75,19 @@ class OrderService(metaclass=ServiceBase):
         if not self.__payment_repository.exists_by_id(payment_id):
             raise NotFound('Payment method not found.')
 
-        if delivery_address_id:
-            if not self.__address_repository.exists_by_id(delivery_address_id):
-                raise NotFound('Delivery address not found.')
-            
-            address = self.__address_repository.get_by_id(delivery_address_id)
-            if address.customer.id != customer_id:
-                raise ValidationError('Delivery address provided does not belong to the customer.')
-        else:
-            new_delivery_address['customer_id'] = customer_id
-            address = self.__address_repository.create(new_delivery_address)
+        if delivery_method == 'ENTREGA':
+            if delivery_address_id:
+                if not self.__address_repository.exists_by_id(delivery_address_id):
+                    raise NotFound('Delivery address not found.')
+                
+                address = self.__address_repository.get_by_id(delivery_address_id)
+                if address.customer.id != customer_id:
+                    raise ValidationError('Delivery address provided does not belong to the customer.')
+            else:
+                new_delivery_address['customer_id'] = customer_id
+                address = self.__address_repository.create(new_delivery_address)
 
-            data['delivery_address_id'] = address.id
+                data['delivery_address_id'] = address.id
         
         data['created_by_id'] = request.user.id
 
@@ -96,8 +97,7 @@ class OrderService(metaclass=ServiceBase):
         if len(products) != len(set(product_ids)):
             missing_ids = set(product_ids) - set(products.keys())
             raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
-        
-        allocations = self.__production_service.validate_production(products, products_data, delivery_date)
+
         order = self.__repository.create(data)
 
         for product in products_data:
@@ -105,12 +105,8 @@ class OrderService(metaclass=ServiceBase):
 
             if not product.get('sale_price'):
                 product['sale_price'] = products[product['product_id']].price
-        
-        for allocation in allocations:
-            allocation['order_id'] = str(order.id)
 
         self.__product_order_repository.bulk_create(products_data)
-        self.__production_repository.create_or_update(allocations)
     
     @transaction.atomic
     def update_order(self, obj, **data):
@@ -160,20 +156,8 @@ class OrderService(metaclass=ServiceBase):
             if len(products) != len(set(product_ids)):
                 missing_ids = set(product_ids) - set(products.keys())
                 raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
-            
-            delivery_date = data.get('delivery_date', obj.delivery_date)
 
             self.__product_order_service.update_products(obj.id, products, products_data)
-            self.__production_service.update_production(obj, products, products_data, delivery_date)
-
-            if self.__production_service._reajust_production(obj, products_data):
-                subsequent_orders = self.__repository.filter(
-                    order_status__identifier__in=[0, 1],
-                    created_at__gte=obj.created_at
-                ).prefetch_related('product_items').order_by('created_at')
-
-                if subsequent_orders:
-                    self.__production_service.reajust_subsequent_orders(products, subsequent_orders)
 
         for attr, value in data.items():
             setattr(obj, attr, value)
@@ -188,7 +172,7 @@ class OrderService(metaclass=ServiceBase):
             created_by_id=user.id,
             order_status__identifier=0
         )
-        new_status = self.__status_repository.get_by_identifier(identifier=1)
+        new_status = self.__status_repository.get_by_sequence_order(sequence_order=1)
 
         self.__repository.update(orders, order_status=new_status.id)
     

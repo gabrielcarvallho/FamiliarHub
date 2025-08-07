@@ -31,7 +31,8 @@ INSTALLED_APPS = [
     'apps.accounts',
     'apps.customers',
     'apps.products',
-    'apps.orders'
+    'apps.orders',
+    'apps.production'
 ]
 
 REST_FRAMEWORK = {

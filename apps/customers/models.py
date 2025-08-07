@@ -16,7 +16,7 @@ class Customer(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     state_registration = models.CharField(max_length=20, null=True, blank=True)
 
-    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_customers')
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

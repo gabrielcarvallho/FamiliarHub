@@ -38,7 +38,7 @@ class Order(models.Model):
     order_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
     is_delivered = models.BooleanField(default=False)
 
-    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='owner_orders')
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

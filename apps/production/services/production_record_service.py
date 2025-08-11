@@ -1,4 +1,5 @@
 from datetime import datetime
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import NotFound, ValidationError
 
@@ -32,6 +33,7 @@ class ProductionRecordService(metaclass=ServiceBase):
             
         return self.__repository.get_all(start_date, end_date)
     
+    @transaction.atomic
     def create_record(self, request, **data):
         status = data.get('status')
         start_date = data.get('start_date')
@@ -67,6 +69,7 @@ class ProductionRecordService(metaclass=ServiceBase):
         if status == 2:
             self.__production_item_service.update_current_stock(production_record)
     
+    @transaction.atomic
     def update_record(self, obj, **data):
         status = data.get('status')
         start_date = data.get('start_date')
@@ -105,3 +108,9 @@ class ProductionRecordService(metaclass=ServiceBase):
 
         if status == 2:
             self.__production_item_service.update_current_stock(obj)
+    
+    def delete_record(self, record_id):
+        if not self.__repository.exists_by_id(record_id):
+            raise NotFound("Production record not found.")
+        
+        self.__repository.delete(record_id)

@@ -2,11 +2,18 @@ from rest_framework.exceptions import NotFound
 
 from apps.core.services import ServiceBase
 from apps.products.repositories import ProductRepository
+from apps.stock.repositories import StockConfigurationRepository
 
 
 class ProductService(metaclass=ServiceBase):
-    def __init__(self, repository=ProductRepository()):
+    def __init__(
+            self, 
+            repository=ProductRepository(),
+            stock_repository=StockConfigurationRepository()
+        ):
+
         self.__repository = repository
+        self.__stock_repository = stock_repository
     
     def get_product(self, product_id):
         if not self.__repository.exists_by_id(product_id):
@@ -37,3 +44,6 @@ class ProductService(metaclass=ServiceBase):
             raise NotFound("Product not found.")
         
         self.__repository.soft_delete(product_id)
+
+        if self.__stock_repository.exists_by_product_id(product_id):
+            self.__stock_repository.soft_delete(product_id)

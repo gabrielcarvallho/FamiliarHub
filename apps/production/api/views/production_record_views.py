@@ -67,3 +67,12 @@ class ProductionRecordView(APIView):
             return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'detail': 'Record ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        record_id = request.query_params.get('id', None)
+
+        if record_id:
+            self.__service.delete_record(record_id)
+            return Response({'detail': 'Production record deleted successfully.'}, status=status.HTTP_200_OK)
+
+        return Response({'detail': 'Production record ID is required.'}, status=status.HTTP_400_BAD_REQUEST)

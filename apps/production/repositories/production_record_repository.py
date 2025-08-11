@@ -26,5 +26,8 @@ class ProductionRecordRepository:
     def create(self, product_data: dict) -> QuerySet[ProductionRecord]:
         return ProductionRecord.objects.create(**product_data)
     
+    def delete(self, record_id: uuid.UUID) -> None:
+        ProductionRecord.objects.filter(id=record_id).delete()
+
     def save(self, obj: ProductionRecord) -> None:
         obj.save()

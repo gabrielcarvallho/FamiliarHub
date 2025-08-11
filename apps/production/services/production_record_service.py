@@ -5,6 +5,9 @@ from rest_framework.exceptions import NotFound, ValidationError
 
 from apps.core.services import ServiceBase
 from apps.production.services import ProductionItemService
+from apps.stock.services.stock_configuration_service import StockConfigurationService
+
+from apps.production.repositories import ProductionItemRepository
 from apps.production.repositories import ProductionRecordRepository
 
 
@@ -12,11 +15,17 @@ class ProductionRecordService(metaclass=ServiceBase):
     def __init__(
             self, 
             repository=ProductionRecordRepository(),
-            production_item_service=ProductionItemService()
+            production_item_repository=ProductionItemRepository(),
+
+            production_item_service=ProductionItemService(),
+            stock_configuration_service=StockConfigurationService()
         ):
 
         self.__repository = repository
+        self.__production_item_repository = production_item_repository
+
         self.__production_item_service = production_item_service
+        self.__stock_configuration_service = stock_configuration_service
     
     def get_record(self, record_id):
         if not self.__repository.exists_by_id(record_id):
@@ -67,7 +76,8 @@ class ProductionRecordService(metaclass=ServiceBase):
         self.__production_item_service.create_items(production_record, items)
 
         if status == 2:
-            self.__production_item_service.update_current_stock(production_record)
+            production_items = self.__production_item_repository.filter_by_production_record_id(production_record.id)
+            self.__stock_configuration_service.replenish_stock(production_items)
     
     @transaction.atomic
     def update_record(self, obj, **data):
@@ -107,7 +117,8 @@ class ProductionRecordService(metaclass=ServiceBase):
         self.__production_item_service.update_production_items(obj, items)
 
         if status == 2:
-            self.__production_item_service.update_current_stock(obj)
+            production_items = self.__production_item_repository.filter_by_production_record_id(obj.id)
+            self.__stock_configuration_service.replenish_stock(production_items)
     
     def delete_record(self, record_id):
         if not self.__repository.exists_by_id(record_id):

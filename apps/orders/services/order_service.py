@@ -4,6 +4,7 @@ from rest_framework.exceptions import NotFound, ValidationError, PermissionDenie
 
 from apps.core.services import ServiceBase
 from apps.orders.services import ProductOrderService
+from apps.stock.services import StockConfigurationService
 
 from apps.products.repositories import ProductRepository
 from apps.orders.repositories import ProductOrderRepository
@@ -23,7 +24,8 @@ class OrderService(metaclass=ServiceBase):
             product_repository=ProductRepository(),
             product_order_repository=ProductOrderRepository(),
 
-            product_order_service=ProductOrderService()
+            product_order_service=ProductOrderService(),
+            stock_configuration_service=StockConfigurationService()
         ):
 
         self.__repository = repository
@@ -35,6 +37,7 @@ class OrderService(metaclass=ServiceBase):
         self.__product_order_repository = product_order_repository
 
         self.__product_order_service = product_order_service
+        self.__stock_configuration_service = stock_configuration_service
 
     def get_order(self, order_id):
         if not self.__repository.exists_by_id(order_id):
@@ -97,7 +100,12 @@ class OrderService(metaclass=ServiceBase):
         if len(products) != len(set(product_ids)):
             missing_ids = set(product_ids) - set(products.keys())
             raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
-
+        
+        inactive_products = [p.name for p in products.values() if not p.is_active]
+        if inactive_products:
+            raise ValidationError(f"Inactive products cannot be ordered: {', '.join(inactive_products)}")
+        
+        self.__stock_configuration_service.validate_current_stock(products, products_data)
         order = self.__repository.create(data)
 
         for product in products_data:
@@ -107,6 +115,7 @@ class OrderService(metaclass=ServiceBase):
                 product['sale_price'] = products[product['product_id']].price
 
         self.__product_order_repository.bulk_create(products_data)
+        self.__stock_configuration_service.consume_stock(products, products_data)
     
     @transaction.atomic
     def update_order(self, obj, **data):
@@ -156,6 +165,10 @@ class OrderService(metaclass=ServiceBase):
             if len(products) != len(set(product_ids)):
                 missing_ids = set(product_ids) - set(products.keys())
                 raise ValidationError(f"Products not found: {', '.join(str(pid) for pid in missing_ids)}")
+            
+            inactive_products = [p.name for p in products.values() if not p.is_active]
+            if inactive_products:
+                raise ValidationError(f"Inactive products cannot be ordered: {', '.join(inactive_products)}")
 
             self.__product_order_service.update_products(obj.id, products, products_data)
 

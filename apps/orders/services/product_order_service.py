@@ -69,26 +69,3 @@ class ProductOrderService(metaclass=ServiceBase):
 
         if to_create:
             self.__repository.bulk_create(to_create)
-    
-    def validate_current_stock(self, obj, products_data):
-        insufficient_stock = []
-    
-        for item in products_data:
-            product_id = item['product_id']
-            quantity = item['quantity']
-            product = obj[product_id]
-            
-            if product.current_stock < quantity:
-                insufficient_stock.append({
-                    'product_name': product.name,
-                    'requested': quantity,
-                    'available': product.current_stock
-                })
-        
-        if insufficient_stock:
-            error_details = [
-                f"{item['product_name']}: requested {item['requested']}, available {item['available']}"
-                for item in insufficient_stock
-            ]
-
-            raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")

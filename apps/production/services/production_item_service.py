@@ -52,12 +52,3 @@ class ProductionItemService(metaclass=ServiceBase):
     def update_production_items(self, production_record, items_data):
         self.__repository.delete(production_record.id)
         self.create_items(production_record, items_data)
-
-    def update_current_stock(self, production_record):
-        items = self.__repository.filter_by_production_record_id(production_record.id)
-
-        for item in items:
-            product = item.product
-            product.current_stock += item.quantity_produced
-
-            self.__product_repository.save(product)

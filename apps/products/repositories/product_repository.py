@@ -23,7 +23,9 @@ class ProductRepository:
         return Product.objects.filter(is_active=False).order_by('name')
     
     def filter_by_id(self, product_ids: list[uuid.UUID])  -> QuerySet[Product]:
-        return Product.objects.filter(id__in=product_ids).order_by('name')
+        return Product.objects.select_related('stock_settings').filter(
+            id__in=product_ids
+        ).order_by('name')
     
     def create(self, product_data: dict) -> QuerySet[Product]:
         Product.objects.create(**product_data)

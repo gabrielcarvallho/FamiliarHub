@@ -40,3 +40,55 @@ class StockConfigurationService(metaclass=ServiceBase):
             setattr(obj, attr, value)
 
         self.__repository.save(obj)
+    
+    def validate_current_stock(self, obj, products_data):
+        insufficient_stock = []
+        products_without_config = []
+
+        for item in products_data:
+            product_id = item['product_id']
+            quantity = item['quantity']
+
+            product = obj[product_id]
+
+            if not hasattr(product, 'stock_settings') or not product.stock_settings:
+                products_without_config.append(product.name)
+                continue
+
+            current_stock = product.stock_settings.current_stock
+            if current_stock < quantity:
+                insufficient_stock.append({
+                    'product_name': product.name,
+                    'requested': quantity,
+                    'available': current_stock
+                })
+
+        if products_without_config:
+            raise ValidationError(
+                f"Products without valid stock configuration: {', '.join(products_without_config)}"
+            )
+    
+        if insufficient_stock:
+            error_details = [
+                f"{item['product_name']}: requested {item['requested']}, available {item['available']}"
+                for item in insufficient_stock
+            ]
+            
+            raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")
+    
+    def consume_stock(self, obj, products_data):
+        for item in products_data:
+            product_id = item['product_id']
+            quantity = item['quantity']
+            product = obj[product_id]
+
+            stock_config = product.stock_settings
+            stock_config.current_stock -= quantity
+            stock_config.save(update_fields=['current_stock', 'updated_at'])
+    
+    def replenish_stock(self, production_items):
+        for item in production_items:
+            configuration = item.product.stock_settings
+            configuration.current_stock += item.quantity_produced
+
+            self.__repository.save(configuration)

@@ -75,7 +75,7 @@ class StockConfigurationService(metaclass=ServiceBase):
             ]
             
             raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")
-    
+ 
     def consume_stock(self, obj, products_data):
         for item in products_data:
             product_id = item['product_id']
@@ -88,7 +88,7 @@ class StockConfigurationService(metaclass=ServiceBase):
     
     def replenish_stock(self, production_items):
         for item in production_items:
-            configuration = item.product.stock_settings
-            configuration.current_stock += item.quantity_produced
+            stock_config = item.product.stock_settings
+            stock_config.current_stock += item.quantity_produced
 
-            self.__repository.save(configuration)
+            stock_config.save(update_fields=['current_stock', 'updated_at'])

@@ -5,6 +5,7 @@ from rest_framework import serializers
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
+        fields = '__all__'
 
 class CreatePaymentSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=20)

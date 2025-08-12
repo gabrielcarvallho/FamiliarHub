@@ -169,7 +169,8 @@ class OrderService(metaclass=ServiceBase):
             inactive_products = [p.name for p in products.values() if not p.is_active]
             if inactive_products:
                 raise ValidationError(f"Inactive products cannot be ordered: {', '.join(inactive_products)}")
-
+            
+            self._reconcile_stock_for_order_update(obj, products, products_data)
             self.__product_order_service.update_products(obj.id, products, products_data)
 
         for attr, value in data.items():
@@ -194,3 +195,61 @@ class OrderService(metaclass=ServiceBase):
             raise NotFound('Order not found.')
 
         self.__repository.delete(order_id)
+    
+    def _reconcile_stock_for_order_update(self, order, products, products_data):
+        current_items = {item.product_id: item.quantity for item in order.product_items.all()}
+        new_items = {item['product_id']: item['quantity'] for item in products_data}
+
+        affected_product_ids = set(current_items.keys()) | set(new_items.keys())
+
+        deltas = {}
+        for product_id in affected_product_ids:
+            old_qty = current_items.get(product_id, 0)
+            new_qty = new_items.get(product_id, 0)
+
+            delta = new_qty - old_qty
+            deltas[product_id] = delta
+
+        insufficient_stock = []
+        products_without_config = []
+        for product_id, delta in deltas.items():
+            if delta > 0:
+                product = products[product_id]
+
+                if not hasattr(product, 'stock_settings') or not product.stock_settings:
+                    products_without_config.append(product.name)
+                    continue
+                
+                if product.stock_settings.current_stock < delta:
+                    insufficient_stock.append({
+                        'product_name': product.name,
+                        'requested': delta,
+                        'available': product.stock_settings.current_stock
+                    })
+                
+        if products_without_config:
+            raise ValidationError(
+                f"Products without valid stock configuration: {', '.join(products_without_config)}"
+            )
+
+        if insufficient_stock:
+            error_details = [
+                f"{item['product_name']}: requested {item['requested']}, available {item['available']}"
+                for item in insufficient_stock
+            ]
+            
+            raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")
+        
+        for product_id, delta in deltas.items():
+            if delta == 0:
+                continue
+            
+            product = products[product_id]
+            stock_config = product.stock_settings
+            
+            if delta > 0:
+                stock_config.current_stock -= delta
+            else:
+                stock_config.current_stock += abs(delta)
+            
+            stock_config.save(update_fields=['current_stock', 'updated_at'])

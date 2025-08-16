@@ -26,7 +26,7 @@ class Status(models.Model):
 class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order_number = models.IntegerField(unique=True, editable=False)
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='customer')
 
     payment_method = models.ForeignKey(Payment, on_delete=models.PROTECT)
     payment_due_days = models.PositiveIntegerField(null=True, blank=True)

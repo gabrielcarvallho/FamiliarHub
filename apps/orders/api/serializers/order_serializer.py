@@ -3,8 +3,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
 from apps.orders.models import Order
+from apps.orders.enums import DeliveryMethod
 from apps.orders.utils.fields import DateField
-from apps.customers.api.serializers import AddressSerializer, CustomerCustomSerializer
+from apps.customers.api.serializers import AddressSerializer
 
 from apps.orders.api.serializers import (
     StatusSerializer,
@@ -13,15 +14,22 @@ from apps.orders.api.serializers import (
 )
 
 
+class OrderCustomerSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    
 class OrderRequestSerializer(serializers.Serializer):
     customer_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     order_status_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     payment_method_id = serializers.UUIDField(format='hex_verbose', write_only=True)
     payment_due_days = serializers.IntegerField(required=False)
+
+    delivery_method = serializers.ChoiceField(choices=DeliveryMethod.choices)
     delivery_date = DateField()
 
     delivery_address_id = serializers.UUIDField(required=False)
     delivery_address = AddressSerializer(required=False)
+
     is_delivered = serializers.BooleanField(required=False)
 
     products = ProductOrderSerializer(many=True)
@@ -31,8 +39,10 @@ class OrderRequestSerializer(serializers.Serializer):
         context = self.context.get('action')
         
         if context == 'create':
-            if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
-                raise APIException("'delivery_address_id' or 'delivery_address' must be provided.")
+            delivery_method = attrs.get('delivery_method')
+            if delivery_method == 'ENTREGA':
+                if 'delivery_address_id' not in attrs and 'delivery_address' not in attrs:
+                    raise APIException("'delivery_address_id' or 'delivery_address' must be provided.")
             
             if 'products' not in attrs or not attrs['products']:
                 raise APIException("Order must have at least one product.")
@@ -53,10 +63,10 @@ class OrderRequestSerializer(serializers.Serializer):
         return attrs
 
 class OrderResponseSerializer(serializers.ModelSerializer):
-    customer = CustomerCustomSerializer()
+    customer = OrderCustomerSerializer()
     order_status = StatusSerializer()
     payment_method = PaymentSerializer()
-    delivery_address = AddressSerializer()
+    delivery_address = AddressSerializer(required=False)
     products = ProductOrderSerializer(many=True, source='product_items')
 
     class Meta:
@@ -73,8 +83,9 @@ class OrderResponseSerializer(serializers.ModelSerializer):
             'products': representation.get('products'),
             'total_price': f"{instance.total_price:.2f}",
             'payment_method': representation.get('payment_method'),
-            'delivery_address': representation.get('delivery_address'),
             'delivery_date': representation.get('delivery_date'),
+            'delivery_method': representation.get('delivery_method'),
+            'delivery_address': representation.get('delivery_address'),
             'is_delivered': representation.get('is_delivered'),
             'due_date': instance.payment_due_date,
             'order_status': representation.get('order_status'),

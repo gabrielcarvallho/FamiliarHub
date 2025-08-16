@@ -14,16 +14,24 @@ class ProductRepository:
         return Product.objects.get(id=product_id)
     
     def get_all(self) -> QuerySet[Product]:
-        return Product.objects.all().order_by('name')
+        return Product.objects.filter().order_by('name')
+    
+    def get_active(self) -> QuerySet[Product]:
+        return Product.objects.filter(is_active=True).order_by('name')
+    
+    def get_inactive(self) -> QuerySet[Product]:
+        return Product.objects.filter(is_active=False).order_by('name')
     
     def filter_by_id(self, product_ids: list[uuid.UUID])  -> QuerySet[Product]:
-        return Product.objects.filter(id__in=product_ids).order_by('name')
+        return Product.objects.select_related('stock_settings').filter(
+            id__in=product_ids
+        ).order_by('name')
     
     def create(self, product_data: dict) -> QuerySet[Product]:
-        return Product.objects.create(**product_data)
+        Product.objects.create(**product_data)
 
-    def delete(self, product_id: uuid.UUID) ->  None:
-        Product.objects.filter(id=product_id).delete()
+    def soft_delete(self, product_id: uuid.UUID) ->  None:
+        Product.objects.filter(id=product_id).update(is_active=False)
     
     def save(self, obj: Product) -> None:
         obj.save()

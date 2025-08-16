@@ -1,29 +1,50 @@
 from rest_framework import serializers
-from apps.products.models import Product
+from rest_framework.validators import ValidationError
+
+from apps.stock.api.serializers import StockConfigurationSerializer
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    id = serializers.UUIDField(read_only=True)
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
+class ProductSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField()
+    price = serializers.DecimalField(max_digits=5, decimal_places=2)
+    weight = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+    is_active = serializers.BooleanField()
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
     
-    class Meta:
-        model = Product
-        fields = '__all__'
+class CreateProductSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    price = serializers.DecimalField(max_digits=5, decimal_places=2)
+    weight = serializers.DecimalField(max_digits=5, decimal_places=2)
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
+    def validate(self, attrs):
+        price = attrs['price']
+        weight = attrs['weight']
 
-        ordered_data = {
-            'id': representation.get('id'),
-            'name': representation.get('name'),
-            'price': representation.get('price'),
-            'weight': representation.get('weight'),
-            'batch_packages': representation.get('batch_packages'),
-            'daily_batch_capacity': representation.get('daily_batch_capacity'),
-            'batch_production_days': representation.get('batch_production_days'),
-            'created_at': representation.get('created_at'),
-            'updated_at': representation.get('updated_at')
-        }
+        if price <= 0:
+            raise ValidationError('Price must be greater than 0.')
+        
+        if weight <= 0:
+            raise ValidationError('Weight must be greater than 0.')
 
-        return ordered_data
+        return attrs
+
+class UpdateProductSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    name = serializers.CharField(max_length=100)
+    price = serializers.DecimalField(max_digits=5, decimal_places=2)
+    weight = serializers.DecimalField(max_digits=5, decimal_places=2)
+
+    def validate(self, attrs):
+        price = attrs['price']
+        weight = attrs['weight']
+
+        if price <= 0:
+            raise ValidationError('Price must be greater than 0.')
+        
+        if weight <= 0:
+            raise ValidationError('Weight must be greater than 0.')
+        
+        return attrs

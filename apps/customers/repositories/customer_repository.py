@@ -7,8 +7,8 @@ class CustomerRepository:
     def exists_by_id(self, customer_id: uuid.UUID) -> bool:
         return Customer.objects.filter(id=customer_id).exists()
     
-    def exists_by_cnpj(self, cnpj: str) -> bool:
-        return Customer.objects.filter(cnpj=cnpj).exists()
+    def exists_by_document(self, document: str) -> bool:
+        return Customer.objects.filter(document=document).exists()
     
     def get_by_id(self, customer_id: uuid.UUID) -> QuerySet[Customer]:
         return Customer.objects.prefetch_related('contact', 'addresses').get(id=customer_id)
@@ -21,7 +21,7 @@ class CustomerRepository:
                 queryset=Address.objects.filter(is_billing_address=True),
                 to_attr='billing_address'
             )
-        ).all().order_by('company_name')
+        ).all().order_by('name')
     
     def filter(self, **params):
         return Customer.objects.filter(**params)

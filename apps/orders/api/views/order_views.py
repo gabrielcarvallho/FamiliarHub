@@ -61,7 +61,7 @@ class OrderViews(APIView):
 
         if serializer.is_valid():
             self.__service.create_order(request, **serializer.validated_data)
-            return Response({'order': 'ok'}, status=status.HTTP_200_OK)
+            return Response({'order': 'Order created successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -77,7 +77,7 @@ class OrderViews(APIView):
             serializer = self.serializer_class(instance=order, data=request.data, partial=True, context={'action': 'update'})
             if serializer.is_valid():
                 self.__service.update_order(order, **serializer.validated_data)
-                return Response({'order': 'ok'}, status=status.HTTP_200_OK)
+                return Response({'order': 'Order updated successfully.'}, status=status.HTTP_200_OK)
             
             return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         

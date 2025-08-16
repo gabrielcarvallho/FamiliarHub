@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from apps.products.services import ProductService
-from apps.products.api.serializers import ProductSerializer
+from apps.products.api.serializers import ProductSerializer, CreateProductSerializer, UpdateProductSerializer
 
 from apps.core.utils.permissions import UserPermission
 from apps.core.utils.pagination import CustomPagination
@@ -12,7 +12,6 @@ from apps.core.utils.pagination import CustomPagination
 
 class ProductView(APIView):
     permission_classes = [IsAuthenticated, UserPermission]
-    serializer_class = ProductSerializer
 
     permission_app_label  = 'products'
     permission_model = 'product'
@@ -23,47 +22,52 @@ class ProductView(APIView):
 
     def get(self, request):
         product_id = request.query_params.get('id', None)
+        status_filter = request.query_params.get('status')
 
         if 'list' in request.GET:
-            products = self.__service.get_all_products()
+            if status_filter == 'active':
+                products = self.__service.get_active_products()
+            elif status_filter == 'inactive':
+                products = self.__service.get_inactive_products()
+            elif status_filter == 'all':
+                products = self.__service.get_all_products()
+            else:
+                return Response({'detail': 'Invalid product status.'}, status=status.HTTP_400_BAD_REQUEST)
 
             paginator = CustomPagination()
             page = paginator.paginate_queryset(products, request)
 
-            response = self.serializer_class(page, many=True)
+            response = ProductSerializer(page, many=True)
             return paginator.get_paginated_response(response.data, resource_name='products')
         
         if product_id:
             product = self.__service.get_product(product_id)
-            response = self.serializer_class(product)
+            response = ProductSerializer(product)
 
             return Response({'product': response.data}, status=status.HTTP_200_OK)
         
         return Response({'detail': 'Product ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
     
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = CreateProductSerializer(data=request.data)
 
         if serializer.is_valid():
-            product = self.__service.create_product(**serializer.validated_data)
-            response = self.serializer_class(product)
-
-            return Response({'product': response.data}, status=status.HTTP_200_OK)
+            self.__service.create_product(**serializer.validated_data)
+            return Response({'detail': 'Product created successfully.'}, status=status.HTTP_200_OK)
         
         return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
-    def patch(self, request):
+    def put(self, request):
         product_id = request.data.get('id')
 
         if product_id:
             product = self.__service.get_product(product_id)
-            serializer = self.serializer_class(instance=product, data=request.data, partial=True)
+            serializer = UpdateProductSerializer(instance=product, data=request.data)
 
             if serializer.is_valid():
-                updated_product = self.__service.update_product(product, **serializer.validated_data)
-                response = self.serializer_class(updated_product)
+                self.__service.update_product(product, **serializer.validated_data)
 
-                return Response({'product': response.data}, status=status.HTTP_200_OK)
+                return Response({'product': 'Product updated successfully.'}, status=status.HTTP_200_OK)
             
             return Response({'detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         

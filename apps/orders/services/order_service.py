@@ -184,7 +184,7 @@ class OrderService(metaclass=ServiceBase):
         
         orders = self.__repository.filter(
             created_by_id=user.id,
-            order_status__identifier=0
+            order_status__sequence_order=0
         )
         new_status = self.__status_repository.get_by_sequence_order(sequence_order=1)
 

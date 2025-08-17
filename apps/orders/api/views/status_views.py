@@ -20,15 +20,15 @@ class StatusView(APIView):
         self.__service = StatusService()
     
     def get(self, request):
-        delivery_method = request.query_params.get('delivery_method')
+        delivery_method = request.query_params.get('delivery_method', 'all')
 
-        if delivery_method:
+        if delivery_method != 'all':
+            statuses = self.__service.get_all_status()
+        else:
             statuses = self.__service.get_status_by_delivery_method(delivery_method)
-            response = StatusSerializer(statuses, many=True)
-
-            return Response({'status': response.data}, status=status.HTTP_200_OK)
         
-        return Response({'detail': 'Delivery method is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        response = StatusSerializer(statuses, many=True)
+        return Response({'status': response.data}, status=status.HTTP_200_OK)
     
     def post(self, request):
         serializer = CreateStatusSerializer(data=request.data)

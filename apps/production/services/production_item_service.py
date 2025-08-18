@@ -50,5 +50,12 @@ class ProductionItemService(metaclass=ServiceBase):
         self.__repository.bulk_create(production_items)
 
     def update_production_items(self, production_record, items_data):
+        filtered_items = [
+            item for item in items_data 
+            if item.get('quantity', 0) > 0
+        ]
+         
         self.__repository.delete(production_record.id)
-        self.create_items(production_record, items_data)
+        
+        if filtered_items:
+            self.create_items(production_record, filtered_items)

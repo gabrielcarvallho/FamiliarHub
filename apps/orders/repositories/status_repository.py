@@ -20,7 +20,7 @@ class StatusRepository:
         ).order_by('sequence_order')
     
     def get_all(self) -> QuerySet[Status]:
-        return Status.objects.all().order_by('identifier')
+        return Status.objects.all().order_by('sequence_order')
     
     def create(self, status_data: dict) -> None:
         Status.objects.create(**status_data)

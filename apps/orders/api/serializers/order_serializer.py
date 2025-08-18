@@ -54,11 +54,11 @@ class OrderRequestSerializer(serializers.Serializer):
             if is_delivered:
                 raise APIException("Cannot mark an order as delivered during creation.")
         
-        today = timezone.now().date()
-        delivery_date = attrs.get('delivery_date', None)
+            today = timezone.now().date()
+            delivery_date = attrs.get('delivery_date', None)
 
-        if delivery_date and delivery_date < today:
-            raise APIException("Invalid delivery date.")
+            if delivery_date and delivery_date < today:
+                raise APIException("Invalid delivery date.")
         
         return attrs
 

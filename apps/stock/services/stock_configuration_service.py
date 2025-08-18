@@ -27,11 +27,15 @@ class StockConfigurationService(metaclass=ServiceBase):
     def create_configuration(self, **data):
         product_id = data.get('product_id')
 
+        if not self.__product_repository.exists_by_id(product_id):
+            raise NotFound('Product not found.')
+
         if self.__repository.exists_by_product_id(product_id):
             raise ValidationError('This product already has a stock configuration.')
         
-        if not self.__product_repository.exists_by_id(product_id):
-            raise NotFound('Product not found.')
+        # product = self.__product_repository.get_by_id(product_id)
+        # if not product.is_active:
+        #     raise ValidationError('Cannot add a stock configuration for an inactive product.')
         
         self.__repository.create(data)
     

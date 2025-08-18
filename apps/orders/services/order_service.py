@@ -154,7 +154,8 @@ class OrderService(metaclass=ServiceBase):
             data['delivery_address_id'] = address.id
         
         if 'is_delivered' in data:
-            if obj.order_status.identifier != 2:
+            if obj.order_status.sequence_order != 2:
+                print(obj.order_status.sequence_order)
                 raise ValidationError('Cannot mark an order as delivered.')
         
         products_data = data.get('products', None)
@@ -184,7 +185,7 @@ class OrderService(metaclass=ServiceBase):
         
         orders = self.__repository.filter(
             created_by_id=user.id,
-            order_status__identifier=0
+            order_status__sequence_order=0
         )
         new_status = self.__status_repository.get_by_sequence_order(sequence_order=1)
 

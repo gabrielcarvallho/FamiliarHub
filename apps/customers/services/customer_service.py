@@ -59,6 +59,7 @@ class CustomerService(metaclass=ServiceBase):
     
     @transaction.atomic
     def update_customer(self, obj, **data):
+        document = data.get('document')
         address_data = data.pop('billing_address', None)
         contact_data = data.pop('contact', None)
 
@@ -69,10 +70,15 @@ class CustomerService(metaclass=ServiceBase):
             setattr(obj.billing_address[0], attr, value)
 
         if contact_data:
-            for attr, value in contact_data.items():
-                setattr(obj.contact, attr, value)
+            if hasattr(obj, 'contact') and obj.contact:
+                for attr, value in contact_data.items():
+                    setattr(obj.contact, attr, value)
+                self.__contact_repository.save(obj.contact)
+            else:
+                contact_data['customer_id'] = obj.id
 
-            self.__contact_repository.save(obj.contact)
+                new_contact = self.__contact_repository.create(contact_data)
+                obj.contact = new_contact
 
         self.__repository.save(obj)
         self.__address_repository.save(obj.billing_address[0])

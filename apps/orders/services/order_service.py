@@ -154,7 +154,8 @@ class OrderService(metaclass=ServiceBase):
             data['delivery_address_id'] = address.id
         
         if 'is_delivered' in data:
-            if obj.order_status.identifier != 2:
+            if obj.order_status.sequence_order != 2:
+                print(obj.order_status.sequence_order)
                 raise ValidationError('Cannot mark an order as delivered.')
         
         products_data = data.get('products', None)

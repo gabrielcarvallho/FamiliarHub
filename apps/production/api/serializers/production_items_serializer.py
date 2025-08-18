@@ -9,14 +9,6 @@ class ProductionItemRequestSerializer(serializers.Serializer):
     quantity_produced = serializers.IntegerField()
     expiration_date = serializers.DateField(required=False, allow_null=True)
 
-    def validate(self, attrs):
-        quantity = attrs.get('quantity_produced')
-
-        if quantity <= 0:
-            raise ValidationError("Quantity must be greater than 0.")
-        
-        return attrs
-
 class ProductionItemResponseSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     

@@ -74,7 +74,7 @@ class StockConfigurationService(metaclass=ServiceBase):
     
         if insufficient_stock:
             error_details = [
-                f"{item['product_name']}: requested {item['requested']}, available {item['available']}"
+                f"{item['product_name']}: solicitado {item['requested']}, disponível {item['available']}"
                 for item in insufficient_stock
             ]
             

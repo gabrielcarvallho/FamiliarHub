@@ -69,7 +69,7 @@ class StockConfigurationService(metaclass=ServiceBase):
 
         if products_without_config:
             raise ValidationError(
-                f"Products without valid stock configuration: {', '.join(products_without_config)}"
+                f"Produtos sem configuração de estoque: {', '.join(products_without_config)}"
             )
     
         if insufficient_stock:
@@ -78,7 +78,7 @@ class StockConfigurationService(metaclass=ServiceBase):
                 for item in insufficient_stock
             ]
             
-            raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")
+            raise ValidationError(f"Estoque insuficiente para os produtos: {'; '.join(error_details)}")
  
     def consume_stock(self, obj, products_data):
         for item in products_data:

@@ -6,6 +6,7 @@ from apps.customers.models import Contact
 
 class ContactSerializer(serializers.ModelSerializer):
     contact_phone = fields.PhoneNumberField()
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = Contact

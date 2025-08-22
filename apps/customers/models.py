@@ -24,7 +24,7 @@ class Contact(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='contact')
     name = models.CharField(max_length=100)
-    date_of_birth = models.DateField()
+    date_of_birth = models.DateField(null=True, blank=True)
     contact_phone = models.CharField(max_length=15)
     contact_email = models.EmailField()
 

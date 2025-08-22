@@ -45,7 +45,7 @@ class CreateCustomerSerializer(serializers.Serializer):
     fantasy_name = serializers.CharField(required=False, allow_blank=True)
     phone_number = fields.PhoneNumberField()
     email = serializers.EmailField(required=False)
-    birth_date = serializers.DateField(required=False)
+    birth_date = serializers.DateField(required=False, allow_null=True)
     state_registration = serializers.CharField(required=False)
     contact = ContactSerializer(required=False)
     billing_address = AddressSerializer(write_only=True)

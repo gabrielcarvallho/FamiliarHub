@@ -54,7 +54,7 @@ class OrderViews(APIView):
             response = OrderResponseSerializer(order)
             return Response({'order': response.data}, status=status.HTTP_200_OK)
         
-        return Response({'detail': "Customer ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': "Order ID is required."}, status=status.HTTP_400_BAD_REQUEST)
                 
     def post(self, request):
         serializer = self.serializer_class(data=request.data, context={'action': 'create'})

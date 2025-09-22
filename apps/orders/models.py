@@ -67,7 +67,7 @@ class Order(models.Model):
                 last_order = Order.objects.order_by('-order_number').first()
                 self.order_number = 1 if not last_order else last_order.order_number + 1
         
-        if self.payment_method.is_requires_due_date and not self.payment_due_days:
+        if self.payment_method.is_requires_due_date and self.payment_due_days is None:
             additional_info = self.payment_method.additional_info
             self.payment_due_days = additional_info.get('due_days')
 

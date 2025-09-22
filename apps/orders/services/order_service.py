@@ -211,7 +211,6 @@ class OrderService(metaclass=ServiceBase):
             delta = new_qty - old_qty
             deltas[product_id] = delta
 
-        insufficient_stock = []
         products_without_config = []
         for product_id, delta in deltas.items():
             if delta > 0:
@@ -221,25 +220,10 @@ class OrderService(metaclass=ServiceBase):
                     products_without_config.append(product.name)
                     continue
                 
-                if product.stock_settings.current_stock < delta:
-                    insufficient_stock.append({
-                        'product_name': product.name,
-                        'requested': delta,
-                        'available': product.stock_settings.current_stock
-                    })
-                
         if products_without_config:
             raise ValidationError(
                 f"Products without valid stock configuration: {', '.join(products_without_config)}"
             )
-
-        if insufficient_stock:
-            error_details = [
-                f"{item['product_name']}: requested {item['requested']}, available {item['available']}"
-                for item in insufficient_stock
-            ]
-            
-            raise ValidationError(f"Insufficient stock for products: {'; '.join(error_details)}")
         
         for product_id, delta in deltas.items():
             if delta == 0:

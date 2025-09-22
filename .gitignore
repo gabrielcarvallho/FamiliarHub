@@ -1,6 +1,8 @@
 .env.dev
 .env.prod
-.vscode
-venv
 
+.vscode
+.vs
+
+venv
 **/__pycache__/

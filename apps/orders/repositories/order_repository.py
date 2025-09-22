@@ -12,7 +12,7 @@ class OrderRepository:
         return Order.objects.prefetch_related('product_items').get(id=order_id)
     
     def get_all(self) -> list[QuerySet[Order]]:
-        return Order.objects.all()
+        return Order.objects.all().order_by('-order_number')
     
     def filter(self, **params):
         return Order.objects.prefetch_related('product_items').filter(**params)

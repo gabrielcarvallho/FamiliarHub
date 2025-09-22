@@ -51,34 +51,16 @@ class StockConfigurationService(metaclass=ServiceBase):
 
         for item in products_data:
             product_id = item['product_id']
-            quantity = item['quantity']
-
             product = obj[product_id]
 
             if not hasattr(product, 'stock_settings') or not product.stock_settings:
                 products_without_config.append(product.name)
                 continue
 
-            current_stock = product.stock_settings.current_stock
-            if current_stock < quantity:
-                insufficient_stock.append({
-                    'product_name': product.name,
-                    'requested': quantity,
-                    'available': current_stock
-                })
-
         if products_without_config:
             raise ValidationError(
                 f"Produtos sem configuração de estoque: {', '.join(products_without_config)}"
             )
-    
-        if insufficient_stock:
-            error_details = [
-                f"{item['product_name']}: solicitado {item['requested']}, disponível {item['available']}"
-                for item in insufficient_stock
-            ]
-            
-            raise ValidationError(f"Estoque insuficiente para os produtos: {'; '.join(error_details)}")
  
     def consume_stock(self, obj, products_data):
         for item in products_data:
